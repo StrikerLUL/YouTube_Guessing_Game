@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anime YouTube Guessing Game Pro - Hidden Video</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #FF1744;
+            --primary-dark: #C41C3B;
+            --secondary: #2196F3;
+            --success: #4CAF50;
+            --warning: #FFC107;
+            --danger: #F44336;
+            --dark: #1a1a2e;
+            --light: #f5f5f5;
+            --border: #ddd;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            background: #f9f9f9;
+            padding: 20px;
+            border-bottom: 2px solid var(--border);
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .stat {
+            text-align: center;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: 300px;
+            margin: 0 auto 40px;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 3px solid var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .video-player {
+            width: 100%;
+            height: 100%;
+            border: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .video-player.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .video-hidden {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            z-index: 20;
+            transition: opacity 0.3s ease;
+        }
+
+        .video-hidden.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .video-hidden-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .video-hidden-text {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0);
+            z-index: 10;
+            transition: opacity 0.3s ease;
+        }
+
+        .video-overlay.active {
+            opacity: 1;
+        }
+
+        .visibility-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f0f7ff;
+            border-radius: 8px;
+            border: 1px solid var(--secondary);
+            transition: all 0.3s ease;
+            max-height: 1000px;
+            overflow: hidden;
+        }
+
+        .visibility-section.hidden {
+            max-height: 0;
+            padding: 0;
+            margin: 0;
+            border: none;
+            opacity: 0;
+        }
+
+        .visibility-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: var(--secondary);
+        }
+
+        .visibility-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .visibility-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .visibility-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .start-button-section {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            gap: 10px;
+        }
+
+        .btn-start-video {
+            padding: 20px 40px;
+            font-size: 1.3em;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-start-video:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.5);
+        }
+
+        .btn-start-video:active {
+            transform: translateY(0);
+        }
+
+        .hint-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f0f7ff;
+            border-left: 4px solid var(--secondary);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            max-height: 1000px;
+            overflow: hidden;
+        }
+
+        .hint-section.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+            max-height: 0;
+            padding: 0;
+            margin: 0;
+            border: none;
+        }
+
+        .hint-button {
+            margin-right: 10px;
+        }
+
+        .hints-remaining {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .form-section {
+            margin: 30px 0;
+            transition: all 0.3s ease;
+            max-height: 1000px;
+            overflow: hidden;
+        }
+
+        .form-section.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+            max-height: 0;
+            padding: 0;
+            margin: 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            position: relative;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 8px rgba(255, 23, 68, 0.2);
+        }
+
+        .autocomplete-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 70px;
+            background: white;
+            border: 2px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .autocomplete-list.active {
+            display: block;
+        }
+
+        .autocomplete-item {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.2s ease;
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item:hover {
+            background-color: #f0f7ff;
+            color: var(--primary);
+        }
+
+        .autocomplete-item.selected {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 23, 68, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #1976D2;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #45a049;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #da190b;
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 0.9em;
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        .difficulty-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .difficulty-btn {
+            padding: 15px;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .difficulty-btn:hover {
+            border-color: var(--primary);
+        }
+
+        .difficulty-btn.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .difficulty-btn.easy { color: var(--success); }
+        .difficulty-btn.medium { color: var(--warning); }
+        .difficulty-btn.hard { color: var(--danger); }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 30px;
+            color: var(--primary);
+        }
+
+        .admin-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .admin-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .admin-panel {
+            display: none;
+        }
+
+        .admin-panel.active {
+            display: block;
+        }
+
+        .admin-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .admin-tab {
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .admin-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .admin-tab-content {
+            display: none;
+        }
+
+        .admin-tab-content.active {
+            display: block;
+        }
+
+        .items-list {
+            margin-top: 20px;
+        }
+
+        .item-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f9f9f9;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .item-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .item-title {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .item-meta {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .result-correct {
+            color: var(--success);
+        }
+
+        .result-incorrect {
+            color: var(--danger);
+        }
+
+        .result-points {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 20px 0;
+            color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .stats-bar {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .admin-button {
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+                font-size: 1.2em;
+            }
+
+            .modal-content {
+                padding: 25px;
+            }
+
+            .video-container {
+                max-width: 100%;
+                height: 250px;
+            }
+
+            .autocomplete-list {
+                right: 0;
+            }
+
+            .btn-start-video {
+                padding: 15px 30px;
+                font-size: 1.1em;
+            }
+
+            .video-hidden-text {
+                font-size: 1em;
+            }
+
+            .video-hidden-icon {
+                font-size: 3em;
+            }
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .message-success {
+            background: #c8e6c9;
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .message-error {
+            background: #ffcdd2;
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+
+        .message-info {
+            background: #bbdefb;
+            color: var(--secondary);
+            border-left: 4px solid var(--secondary);
+        }
+
+        .message-warning {
+            background: #fff3cd;
+            color: var(--warning);
+            border-left: 4px solid var(--warning);
+        }
+
+        .youtube-info {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 8px;
+            font-style: italic;
+        }
+    </style>
+<script type="text/javascript" nonce="68b78f9716914a06b2db7fdc4d3" src="//injections.adguard.org?ts=1768222486918&amp;type=content-script&amp;dmn=ppl-ai-code-interpreter-files.s3.amazonaws.com&amp;url=https%3A%2F%2Fppl-ai-code-interpreter-files.s3.amazonaws.com%2Fweb%2Fdirect-files%2Fe9512fca4a5590daaea861c0acca31dc%2F86cdf302-22ef-4723-9688-b2dedcbac61d%2F24df75c2.html%3Fresponse-content-disposition%3Dattachment%253B%2520filename%253Dyoutube_game_hidden.html%253B%2520filename%252A%253DUTF-8%2527%2527youtube_game_hidden.html%26AWSAccessKeyId%3DASIA2F3EMEYE2ZLR3KJQ%26Signature%3DCxzs1%252Bo4L8A86JGAOj5F%252FxzqBe0%253D%26x-amz-security-token%3DIQoJb3JpZ2luX2VjECUaCXVzLWVhc3QtMSJIMEYCIQDC7ln9M5JAe3MP7k4grYoEU5M8Sg4v%252FH4telk6b%252BX%252FpgIhAIH0XmYiJRm%252BLJt6NZfiCeWUbDd4F%252BeL8hkLkrcFGwvnKvwECO7%252F%252F%252F%252F%252F%252F%252F%252F%252F%252FwEQARoMNjk5NzUzMzA5NzA1IgxjprVt1TM0444mzsUq0ARaBHWLvQViKnYrm4vWxadUMhYwKtf9rdXkQXRoBweM5bn9v2AAylr2yVbZi4RY0FlHFop860Z3JXI7T5X5xHfrLCKo4IKG8YmDoirZv9D4DpefI7AzYDRv9GVNXmnnXd0zE0GHmSeQvzVoisGmyNINw13x0jSNY0kb4ieSw94fsmLdUhwLyRWINkAow%252FOnVh6G0iKQRW2669P7v7Ib4V%252BJ%252F6%252BWUniWKrc%252BgNJAbdSEhpsiHxnHHSwkGbuZvQJVmYj2tcaxrI0Yf0fjRdKFMA2ePYuE5g0mD6SIeo5FqOl4xcFNOmxtjUFEXdGZNDg57r5Z6NRAD82pIiQvdraAZFR%252FwOoTAs51bxORln5t9JZWxYcibBEdOftzWZe%252F2LN2hv4qe8GFkDugFMgT160tjmm5mOOOrIjz%252F0KH5K%252FKEQf%252FqxWAfhVO6%252BRqEzMK45JD0Cpis7irck9vDaDJbZTh%252F8SGapP26guN9jix%252FAxzU5V1yhgvKfUGd%252FEiV7oSwpbaSB6QE7R%252FrVlnliSUhif9MRcJ0%252BlgPmgr%252FZUw24RFs6Z9iQkGuLPqfa7oJJdpWoKw5JAmpGu9%252Fb8menheKjEevGXBvREdevIj9Elmmm7vitbdJPDiFNEFG%252FeRERafpBIhKJ3z82g%252FKikHUBbQfppluyrv0WtfEKlyxs4qRdT4mbQrllhEnHGtBcGfmooi5PV%252Fw%252FTYs5Skbqv273xFxcDnqghfgttQeWwdXAB2KajtL%252FCWHuec031EBC6LJTCZGuEbZsgHYmbVS4WLHuj5%252F%252FaICxYyMPXdk8sGOpcBIW7Y%252FerfW7prjyokpYo4oVkb%252BOjDTQcSp1DAalEUUONyrqHj6I2ouvw7HkAYZhxeodnQIBeli9sGk0yFvNqOtNLjLtkxcJD8J7w7CXb2Vtpoh9uH9KsEV2DGOvpIHhUIe1Oc1oWIHfJv%252BGbOc%252B8e%252FvAUQ5ZaJvZ5%252Bz%252Bzmqw7uyRbIZJwrkGRMZEu%252BKlrLz2aAc9T0FnLoA%253D%253D%26Expires%3D1768224310&amp;app=comet.exe&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1&amp;stealth=1&amp;st-push&amp;st-loc&amp;st-dnt&amp;st-1pcttl=4320"></script><script type="text/javascript" nonce="68b78f9716914a06b2db7fdc4d3" src="//injections.adguard.org?ts=1768222486918&amp;name=AdGuard%20Assistant&amp;name=AdGuard%20Extra&amp;name=AdGuard%20Popup%20Blocker&amp;name=Web%20of%20Trust&amp;type=user-script"></script></head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎌 Anime YouTube Guessing Game Pro 🎬</h1>
+            <p>Erkenne Anime aus YouTube Videos!</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-label">Punkte</div>
+                <div class="stat-value" id="scoreDisplay">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Richtig</div>
+                <div class="stat-value" id="correctCount">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Falsch</div>
+                <div class="stat-value" id="wrongCount">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Quote</div>
+                <div class="stat-value" id="accuracy">0%</div>
+            </div>
+        </div>
+
+        <div class="content" id="gameContent">
+            <div class="video-container" id="videoContainer">
+                <div class="video-wrapper">
+                    <div class="video-hidden" id="videoHidden">
+                        <div class="video-hidden-icon">🎬</div>
+                        <div class="video-hidden-text">Video ist versteckt</div>
+                    </div>
+                    <iframe 
+                        id="youtubePlayer" 
+                        class="video-player" 
+                        src="" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen=""
+                    ></iframe>
+                    <div class="video-overlay active" id="videoOverlay"></div>
+                </div>
+            </div>
+
+            <div class="start-button-section">
+                <button class="btn-start-video" id="startVideoBtn" onclick="startVideo()">
+                    ▶️ VIDEO STARTEN
+                </button>
+            </div>
+
+            <div class="visibility-section hidden" id="visibilitySection">
+                <div class="visibility-label">
+                    <span>🎥 Video-Sichtbarkeit:</span>
+                    <span id="visibilityPercent">50%</span>
+                </div>
+                <input 
+                    type="range" 
+                    class="visibility-slider" 
+                    id="visibilitySlider" 
+                    min="10" 
+                    max="90" 
+                    value="50"
+                    step="5"
+                >
+                <div style="font-size: 0.85em; color: #666; margin-top: 10px; text-align: center;">
+                    Schiebe den Regler um das Video deutlicher zu sehen
+                </div>
+            </div>
+
+            <div class="hint-section disabled" id="hintSection">
+                <div>
+                    <button class="btn-secondary btn-small hint-button" id="revealHintBtn" onclick="revealHint()">💡 Hinweis abholen</button>
+                    <span class="hints-remaining" id="hintsRemaining">Hinweise übrig: 3</span>
+                </div>
+                <div id="hintDisplay" style="margin-top: 10px; font-style: italic; color: #1976D2;"></div>
+            </div>
+
+            <div class="form-section disabled" id="formSection">
+                <form id="answerForm" onsubmit="submitAnswer(event)">
+                    <div class="form-group">
+                        <label for="answerInput">Deine Antwort:</label>
+                        <div class="input-group" style="position: relative;">
+                            <input 
+                                type="text" 
+                                id="answerInput" 
+                                placeholder="Gib den Anime-Namen ein..."
+                                autocomplete="off"
+                                disabled
+                                oninput="updateAutocomplete()"
+                            >
+                            <button type="submit" class="btn-primary" id="submitBtn" disabled>Absenden</button>
+                            <div class="autocomplete-list" id="autocompleteList"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <button class="btn-success btn-full" id="nextGameBtn" onclick="startNewGame()" style="display:none;">
+                ▶️ Nächstes Spiel
+            </button>
+
+            <div style="margin-top: 40px; text-align: center;">
+                <h3 style="margin-bottom: 15px;">Schwierigkeitsgrad filtern:</h3>
+                <div class="difficulty-section" id="difficultyFilter">
+                    <button class="difficulty-btn all-difficulties selected" onclick="filterByDifficulty('all')">
+                        Alle
+                    </button>
+                    <button class="difficulty-btn easy" onclick="filterByDifficulty('easy')">
+                        ⭐ Leicht (1-3)
+                    </button>
+                    <button class="difficulty-btn medium" onclick="filterByDifficulty('medium')">
+                        ⭐⭐ Mittel (4-5)
+                    </button>
+                    <button class="difficulty-btn hard" onclick="filterByDifficulty('hard')">
+                        ⭐⭐⭐ Schwer (6-10)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-panel" id="adminPanel">
+            <div class="content">
+                <h2 style="margin-bottom: 20px;">⚙️ Admin Panel</h2>
+                
+                <div class="admin-tabs">
+                    <button class="admin-tab active" onclick="switchAdminTab('add')">Neuer Eintrag</button>
+                    <button class="admin-tab" onclick="switchAdminTab('manage')">Verwalten</button>
+                    <button class="admin-tab" onclick="switchAdminTab('export')">Daten</button>
+                </div>
+
+                <div id="addTab" class="admin-tab-content active">
+                    <form id="addContentForm">
+                        <div class="form-group">
+                            <label for="titleInput">Anime-Name:</label>
+                            <input type="text" id="titleInput" placeholder="z.B. Demon Slayer" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="youtubeInput">YouTube-Link:</label>
+                            <input 
+                                type="text" 
+                                id="youtubeInput" 
+                                placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                                required
+                            >
+                            <div class="youtube-info">
+                                📋 Kopiere einfach den YouTube-Link aus der Adressleiste
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="difficultyInput">Schwierigkeitsgrad (1-10):</label>
+                            <input 
+                                type="number" 
+                                id="difficultyInput" 
+                                min="1" 
+                                max="10" 
+                                value="5"
+                                required
+                            >
+                        </div>
+
+                        <button type="submit" class="btn-primary btn-full">
+                            ✅ Hinzufügen
+                        </button>
+                    </form>
+                </div>
+
+                <div id="manageTab" class="admin-tab-content">
+                    <div id="itemsList" class="items-list">
+                        <p style="color: #999;">Keine Einträge vorhanden. Füge neue hinzu!</p>
+                    </div>
+                </div>
+
+                <div id="exportTab" class="admin-tab-content">
+                    <h3 style="margin-bottom: 20px;">Datenmanagement</h3>
+                    
+                    <button class="btn-secondary btn-full" onclick="exportData()" style="margin-bottom: 15px;">
+                        📥 Daten exportieren (JSON)
+                    </button>
+
+                    <button class="btn-secondary btn-full" onclick="document.getElementById('importFile').click()" style="margin-bottom: 15px;">
+                        📤 Daten importieren
+                    </button>
+                    <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
+
+                    <button class="btn-danger btn-full" onclick="resetData()">
+                        🗑️ Alle Daten löschen (NICHT RÜCKGÄNGIG!)
+                    </button>
+
+                    <div style="margin-top: 30px; padding: 20px; background: #f0f7ff; border-radius: 8px;">
+                        <h4 style="color: var(--secondary); margin-bottom: 10px;">📊 Statistiken:</h4>
+                        <p>Einträge gesamt: <strong id="statsCount">0</strong></p>
+                        <p>Speichergröße: <strong id="statsSize">0 KB</strong></p>
+                    </div>
+                </div>
+
+                <button class="btn-primary btn-full" onclick="closeAdminPanel()" style="margin-top: 30px;">
+                    ✅ Admin Panel schließen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <button class="admin-button" onclick="openAdminPanel()" id="adminToggle">⚙️</button>
+
+    <div id="resultModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-header" id="resultTitle">Richtig!</h2>
+            <div id="resultMessage"></div>
+            <div class="result-points" id="resultPoints">+0 Punkte</div>
+            <button class="btn-primary btn-full" onclick="closeResultModal()">OK</button>
+        </div>
+    </div>
+
+    <script>
+        const ADMIN_PASSWORD = 'admin123';
+        const STORAGE_KEY = 'animeYoutubeGameData';
+
+        let gameState = {
+            currentItem: null,
+            score: 0,
+            correct: 0,
+            wrong: 0,
+            hintsRemaining: 3,
+            hintsUsed: 0,
+            gameOver: false,
+            currentDifficulty: 'all',
+            visibility: 50,
+            videoStarted: false
+        };
+
+        let gameData = {
+            items: [],
+            lastPlayed: []
+        };
+
+        function init() {
+            loadGameData();
+            createDefaultData();
+            startNewGame();
+            setupEventListeners();
+        }
+
+        function setupEventListeners() {
+            document.getElementById('addContentForm').addEventListener('submit', addContent);
+            document.getElementById('visibilitySlider').addEventListener('input', updateVisibility);
+        }
+
+        function startVideo() {
+            if (!gameState.currentItem) return;
+
+            gameState.videoStarted = true;
+
+            document.getElementById('videoHidden').classList.add('hidden');
+            document.getElementById('videoOverlay').classList.remove('active');
+            document.getElementById('youtubePlayer').classList.add('active');
+            document.getElementById('visibilitySection').classList.remove('hidden');
+            document.getElementById('hintSection').classList.remove('disabled');
+            document.getElementById('formSection').classList.remove('disabled');
+            document.getElementById('answerInput').disabled = false;
+            document.getElementById('submitBtn').disabled = false;
+            document.getElementById('startVideoBtn').style.display = 'none';
+
+            updateVisibility({ target: document.getElementById('visibilitySlider') });
+
+            document.getElementById('answerInput').focus();
+        }
+
+        function updateVisibility(e) {
+            const visibility = parseInt(e.target.value);
+            gameState.visibility = visibility;
+            document.getElementById('visibilityPercent').textContent = visibility + '%';
+            
+            const opacity = 1 - (visibility / 100);
+            document.getElementById('videoOverlay').style.opacity = opacity;
+        }
+
+        function loadGameData() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    gameData = JSON.parse(stored);
+                } catch (e) {
+                    console.error('Fehler beim Laden der Daten:', e);
+                    gameData = { items: [], lastPlayed: [] };
+                }
+            }
+        }
+
+        function saveGameData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
+            updateStats();
+        }
+
+        function createDefaultData() {
+            if (gameData.items.length === 0) {
+                gameData.items = [
+                    {
+                        id: 1,
+                        title: 'Demon Slayer',
+                        youtube: 'https://www.youtube.com/embed/VQGCKyvzIM0',
+                        difficulty: 3,
+                        hints: ['Ein Anime mit Dämonen', 'Die Hauptfigur trägt eine Maske', 'Es geht um eine Familie']
+                    },
+                    {
+                        id: 2,
+                        title: 'Attack on Titan',
+                        youtube: 'https://www.youtube.com/embed/XMXgHfHxKVM',
+                        difficulty: 4,
+                        hints: ['Große Mauern', 'Riesige Kreaturen', 'Strategie und Aktion']
+                    },
+                    {
+                        id: 3,
+                        title: 'Death Note',
+                        youtube: 'https://www.youtube.com/embed/DNaKpV9HnWU',
+                        difficulty: 5,
+                        hints: ['Ein magisches Notizbuch', 'Ein Buch das Tode herbeiführt', 'Psychologischer Thriller']
+                    }
+                ];
+                saveGameData();
+            }
+        }
+
+        function startNewGame() {
+            gameState.gameOver = false;
+            gameState.hintsRemaining = 3;
+            gameState.hintsUsed = 0;
+            gameState.videoStarted = false;
+
+            const filteredItems = filterItems();
+            if (filteredItems.length === 0) {
+                showMessage('Keine Einträge mit diesem Schwierigkeitsgrad vorhanden!', 'warning');
+                return;
+            }
+
+            gameState.currentItem = filteredItems[Math.floor(Math.random() * filteredItems.length)];
+
+            document.getElementById('answerInput').value = '';
+            document.getElementById('answerInput').disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('nextGameBtn').style.display = 'none';
+            document.getElementById('autocompleteList').classList.remove('active');
+
+            document.getElementById('videoHidden').classList.remove('hidden');
+            document.getElementById('videoOverlay').classList.add('active');
+            document.getElementById('youtubePlayer').classList.remove('active');
+            document.getElementById('visibilitySection').classList.add('hidden');
+            document.getElementById('hintSection').classList.add('disabled');
+            document.getElementById('formSection').classList.add('disabled');
+            document.getElementById('startVideoBtn').style.display = 'block';
+
+            loadGameContent();
+            updateStats();
+        }
+
+        function filterItems() {
+            let filtered = gameData.items;
+            
+            if (gameState.currentDifficulty !== 'all') {
+                filtered = filtered.filter(item => {
+                    if (gameState.currentDifficulty === 'easy') return item.difficulty <= 3;
+                    if (gameState.currentDifficulty === 'medium') return item.difficulty >= 4 && item.difficulty <= 5;
+                    if (gameState.currentDifficulty === 'hard') return item.difficulty >= 6;
+                    return true;
+                });
+            }
+            
+            return filtered;
+        }
+
+        function loadGameContent() {
+            if (!gameState.currentItem) return;
+
+            const youtubeLink = gameState.currentItem.youtube;
+            const youtubePlayer = document.getElementById('youtubePlayer');
+
+            if (youtubeLink) {
+                youtubePlayer.src = youtubeLink;
+            }
+
+            document.getElementById('hintDisplay').textContent = '';
+        }
+
+        function updateAutocomplete() {
+            const input = document.getElementById('answerInput').value.trim().toLowerCase();
+            const autocompleteList = document.getElementById('autocompleteList');
+
+            if (input.length === 0) {
+                autocompleteList.classList.remove('active');
+                return;
+            }
+
+            const filteredItems = gameData.items.filter(item => 
+                item.title.toLowerCase().startsWith(input)
+            );
+
+            if (filteredItems.length === 0) {
+                autocompleteList.classList.remove('active');
+                return;
+            }
+
+            autocompleteList.innerHTML = filteredItems.map(item => `
+                <div class="autocomplete-item" onclick="selectAutocomplete('${item.title}')">
+                    ${item.title}
+                </div>
+            `).join('');
+
+            autocompleteList.classList.add('active');
+        }
+
+        function selectAutocomplete(title) {
+            document.getElementById('answerInput').value = title;
+            document.getElementById('autocompleteList').classList.remove('active');
+            document.getElementById('answerInput').focus();
+        }
+
+        function submitAnswer(e) {
+            e.preventDefault();
+            if (gameState.gameOver || !gameState.videoStarted) return;
+
+            const input = document.getElementById('answerInput');
+            const answer = input.value.trim().toLowerCase();
+
+            if (!answer) return;
+
+            gameState.gameOver = true;
+            input.disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+
+            const correct = answer === gameState.currentItem.title.toLowerCase();
+
+            if (correct) {
+                gameState.correct++;
+                const basePoints = 100;
+                const difficultyBonus = gameState.currentItem.difficulty * 5;
+                const hintsBonus = (3 - gameState.hintsUsed) * 10;
+                const points = basePoints + difficultyBonus + hintsBonus;
+
+                gameState.score += points;
+
+                showResultModal(true, `Richtig! Es ist "${gameState.currentItem.title}"`, points);
+            } else {
+                gameState.wrong++;
+                showResultModal(false, `Falsch! Es ist "${gameState.currentItem.title}"`, 0);
+            }
+
+            updateStats();
+            saveGameData();
+            document.getElementById('nextGameBtn').style.display = 'block';
+        }
+
+        function revealHint() {
+            if (gameState.hintsRemaining <= 0 || !gameState.currentItem) {
+                showMessage('Keine Hinweise mehr vorhanden!', 'warning');
+                return;
+            }
+
+            const hints = gameState.currentItem.hints || [];
+            const hintIndex = gameState.hintsUsed;
+
+            if (hintIndex >= hints.length) {
+                showMessage('Alle Hinweise aufgebraucht!', 'warning');
+                return;
+            }
+
+            const hint = hints[hintIndex];
+            document.getElementById('hintDisplay').textContent = `💡 ${hint}`;
+
+            gameState.hintsRemaining--;
+            gameState.hintsUsed++;
+
+            document.getElementById('hintsRemaining').textContent = `Hinweise übrig: ${gameState.hintsRemaining}`;
+            document.getElementById('revealHintBtn').disabled = gameState.hintsRemaining <= 0;
+        }
+
+        function showResultModal(isCorrect, message, points) {
+            const modal = document.getElementById('resultModal');
+            const title = document.getElementById('resultTitle');
+            const msgDiv = document.getElementById('resultMessage');
+            const pointsDiv = document.getElementById('resultPoints');
+
+            title.textContent = isCorrect ? '✅ Richtig!' : '❌ Falsch!';
+            title.className = 'modal-header ' + (isCorrect ? 'result-correct' : 'result-incorrect');
+            msgDiv.textContent = message;
+            pointsDiv.textContent = `${isCorrect ? '+' : ''}${points} Punkte`;
+
+            modal.classList.add('active');
+        }
+
+        function closeResultModal() {
+            document.getElementById('resultModal').classList.remove('active');
+        }
+
+        function updateStats() {
+            document.getElementById('scoreDisplay').textContent = gameState.score;
+            document.getElementById('correctCount').textContent = gameState.correct;
+            document.getElementById('wrongCount').textContent = gameState.wrong;
+
+            const total = gameState.correct + gameState.wrong;
+            const accuracy = total === 0 ? 0 : Math.round((gameState.correct / total) * 100);
+            document.getElementById('accuracy').textContent = accuracy + '%';
+
+            const itemsCount = gameData.items.length;
+            const storageSize = (JSON.stringify(gameData).length / 1024).toFixed(2);
+            document.getElementById('statsCount').textContent = itemsCount;
+            document.getElementById('statsSize').textContent = storageSize + ' KB';
+        }
+
+        function filterByDifficulty(difficulty) {
+            gameState.currentDifficulty = difficulty;
+
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+
+            startNewGame();
+        }
+
+        function openAdminPanel() {
+            const password = prompt('Admin-Passwort eingeben:');
+            if (password !== ADMIN_PASSWORD) {
+                showMessage('Falsches Passwort!', 'error');
+                return;
+            }
+
+            document.getElementById('gameContent').style.display = 'none';
+            document.getElementById('adminPanel').classList.add('active');
+            document.getElementById('adminToggle').style.display = 'none';
+            refreshManageTab();
+        }
+
+        function closeAdminPanel() {
+            document.getElementById('gameContent').style.display = 'block';
+            document.getElementById('adminPanel').classList.remove('active');
+            document.getElementById('adminToggle').style.display = 'block';
+            startNewGame();
+        }
+
+        function switchAdminTab(tabName) {
+            document.querySelectorAll('.admin-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.admin-tab-content').forEach(content => content.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+
+            if (tabName === 'manage') {
+                refreshManageTab();
+            }
+        }
+
+        function addContent(e) {
+            e.preventDefault();
+
+            const title = document.getElementById('titleInput').value.trim();
+            const youtubeLink = document.getElementById('youtubeInput').value.trim();
+            const difficulty = parseInt(document.getElementById('difficultyInput').value);
+
+            if (!title || !youtubeLink || !difficulty) {
+                showMessage('Bitte alle Felder ausfüllen!', 'error');
+                return;
+            }
+
+            const embedUrl = convertToYoutubeEmbed(youtubeLink);
+            if (!embedUrl) {
+                showMessage('YouTube-Link ungültig! Beispiel: https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'error');
+                return;
+            }
+
+            const newItem = {
+                id: Date.now(),
+                title: title,
+                youtube: embedUrl,
+                difficulty: difficulty,
+                hints: [
+                    `Der Anime "${title}" hat eine spannende Handlung`,
+                    `${title} ist ein bekannter Anime`,
+                    `Versuche, dich die Story zu merken`
+                ]
+            };
+
+            gameData.items.push(newItem);
+            saveGameData();
+
+            document.getElementById('addContentForm').reset();
+            showMessage(`"${title}" erfolgreich hinzugefügt!`, 'success');
+            refreshManageTab();
+        }
+
+        function convertToYoutubeEmbed(link) {
+            let videoId = null;
+
+            if (link.includes('youtube.com/watch?v=')) {
+                videoId = link.split('youtube.com/watch?v=')[1].split('&')[0];
+            }
+            else if (link.includes('youtu.be/')) {
+                videoId = link.split('youtu.be/')[1].split('?')[0];
+            }
+            else if (link.includes('youtube.com/embed/')) {
+                return link;
+            }
+            else if (link.length === 11 && !link.includes('/')) {
+                videoId = link;
+            }
+
+            if (videoId) {
+                return `https://www.youtube.com/embed/${videoId}`;
+            }
+            return null;
+        }
+
+        function refreshManageTab() {
+            const list = document.getElementById('itemsList');
+
+            if (gameData.items.length === 0) {
+                list.innerHTML = '<p style="color: #999;">Keine Einträge vorhanden.</p>';
+                return;
+            }
+
+            list.innerHTML = gameData.items.map(item => `
+                <div class="item-card">
+                    <div class="item-info">
+                        <div class="item-title">${item.title}</div>
+                        <div class="item-meta">
+                            Schwierigkeit: ${'⭐'.repeat(Math.min(item.difficulty, 3))} (${item.difficulty}/10)
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn-secondary btn-small" onclick="editItem(${item.id})">
+                            ✏️ Bearbeiten
+                        </button>
+                        <button class="btn-danger btn-small" onclick="deleteItem(${item.id})">
+                            🗑️ Löschen
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function editItem(id) {
+            const item = gameData.items.find(i => i.id === id);
+            if (!item) return;
+
+            document.getElementById('titleInput').value = item.title;
+            document.getElementById('youtubeInput').value = item.youtube;
+            document.getElementById('difficultyInput').value = item.difficulty;
+
+            switchAdminTab('add');
+
+            const submitBtn = document.querySelector('#addContentForm button[type="submit"]');
+            submitBtn.textContent = '✏️ Speichern';
+
+            const originalOnSubmit = document.getElementById('addContentForm').onsubmit;
+            document.getElementById('addContentForm').onsubmit = (e) => {
+                e.preventDefault();
+                const updatedTitle = document.getElementById('titleInput').value.trim();
+                const updatedDifficulty = parseInt(document.getElementById('difficultyInput').value);
+
+                item.title = updatedTitle;
+                item.difficulty = updatedDifficulty;
+                saveGameData();
+
+                document.getElementById('addContentForm').onsubmit = originalOnSubmit;
+                submitBtn.textContent = '✅ Hinzufügen';
+                document.getElementById('addContentForm').reset();
+
+                showMessage(`"${updatedTitle}" aktualisiert!`, 'success');
+                refreshManageTab();
+            };
+        }
+
+        function deleteItem(id) {
+            if (!confirm('Wirklich löschen?')) return;
+
+            const index = gameData.items.findIndex(i => i.id === id);
+            if (index !== -1) {
+                const title = gameData.items[index].title;
+                gameData.items.splice(index, 1);
+                saveGameData();
+                showMessage(`"${title}" gelöscht!`, 'success');
+                refreshManageTab();
+            }
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify(gameData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `anime-youtube-game-pro-${new Date().getTime()}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+            showMessage('Daten exportiert!', 'success');
+        }
+
+        function importData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const imported = JSON.parse(event.target.result);
+                    if (imported.items && Array.isArray(imported.items)) {
+                        gameData = imported;
+                        saveGameData();
+                        showMessage('Daten importiert!', 'success');
+                        refreshManageTab();
+                    } else {
+                        showMessage('Ungültiges Dateiformat!', 'error');
+                    }
+                } catch (err) {
+                    showMessage('Fehler beim Importieren!', 'error');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        function resetData() {
+            if (!confirm('ACHTUNG: Dies löscht ALLE Daten! Dies kann nicht rückgängig gemacht werden!')) return;
+            if (!confirm('Bist du dir wirklich sicher? ALLE Daten werden gelöscht!')) return;
+
+            gameData = { items: [], lastPlayed: [] };
+            gameState = {
+                score: 0,
+                correct: 0,
+                wrong: 0,
+                hintsRemaining: 3,
+                hintsUsed: 0,
+                gameOver: false,
+                currentDifficulty: 'all',
+                visibility: 50,
+                videoStarted: false
+            };
+
+            localStorage.removeItem(STORAGE_KEY);
+            createDefaultData();
+            showMessage('Daten zurückgesetzt!', 'success');
+            refreshManageTab();
+            updateStats();
+        }
+
+        function showMessage(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `message message-${type}`;
+            div.textContent = message;
+            div.style.position = 'fixed';
+            div.style.top = '20px';
+            div.style.right = '20px';
+            div.style.zIndex = '999';
+            div.style.maxWidth = '300px';
+
+            document.body.appendChild(div);
+
+            setTimeout(() => {
+                div.remove();
+            }, 4000);
+        }
+
+        document.addEventListener('click', (e) => {
+            if (e.target.id !== 'answerInput') {
+                document.getElementById('autocompleteList').classList.remove('active');
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>
