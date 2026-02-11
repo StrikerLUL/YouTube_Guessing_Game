@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anime YouTube Guessing Game Pro - Hidden Video</title>
+    <title>🎌 Anime YouTube Guessing Game Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -14,18 +18,29 @@
         :root {
             --primary: #FF1744;
             --primary-dark: #C41C3B;
+            --primary-light: #FF5370;
             --secondary: #2196F3;
+            --secondary-dark: #1976D2;
             --success: #4CAF50;
             --warning: #FFC107;
             --danger: #F44336;
-            --dark: #1a1a2e;
+            --dark: #0f0f23;
+            --dark-card: #1a1a2e;
             --light: #f5f5f5;
-            --border: #ddd;
+            --border: #e0e0e0;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        * {
+            scroll-behavior: smooth;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 200% 200%;
+            animation: gradientShift 15s ease infinite;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -33,13 +48,41 @@
             padding: 20px;
         }
 
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
         .container {
             width: 100%;
             max-width: 900px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35), 0 10px 30px rgba(0, 0, 0, 0.22);
             overflow: hidden;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .header {
@@ -98,7 +141,7 @@
             max-width: 500px;
             height: 300px;
             margin: 0 auto 40px;
-            background: #000;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             border-radius: 10px;
             overflow: hidden;
             border: 3px solid var(--primary);
@@ -123,6 +166,7 @@
             left: 0;
             opacity: 0;
             pointer-events: none;
+            /* Video komplett versteckt - nur Audio */
         }
 
         .video-player.active {
@@ -148,8 +192,7 @@
         }
 
         .video-hidden.hidden {
-            opacity: 0;
-            pointer-events: none;
+            display: none;
         }
 
         .video-hidden-icon {
@@ -159,8 +202,15 @@
         }
 
         @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
         }
 
         .video-hidden-text {
@@ -169,39 +219,59 @@
             font-weight: bold;
         }
 
-        .video-overlay {
+        .audio-playing {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
             z-index: 10;
-            transition: opacity 0.3s ease;
         }
 
-        .video-overlay.active {
-            opacity: 1;
+        .audio-playing.hidden {
+            display: none;
         }
 
-        .visibility-section {
-            margin: 30px 0;
-            padding: 20px;
-            background: #f0f7ff;
-            border-radius: 8px;
-            border: 1px solid var(--secondary);
-            transition: all 0.3s ease;
-            max-height: 1000px;
-            overflow: hidden;
+        .audio-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+            animation: audioWave 1.5s ease-in-out infinite;
         }
 
-        .visibility-section.hidden {
-            max-height: 0;
-            padding: 0;
-            margin: 0;
-            border: none;
-            opacity: 0;
+        @keyframes audioWave {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 0.7;
+            }
         }
+
+        .audio-text {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #FF1744;
+            margin-bottom: 10px;
+        }
+
+        .audio-hint {
+            font-size: 0.95em;
+            opacity: 0.8;
+        }
+
+
 
         .visibility-label {
             display: flex;
@@ -252,14 +322,49 @@
         .btn-start-video {
             padding: 20px 40px;
             font-size: 1.3em;
-            background: var(--success);
+            background: linear-gradient(135deg, var(--success) 0%, #66BB6A 100%);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.4);
+            animation: pulse 2s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-start-video::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn-start-video:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                box-shadow: 0 8px 20px rgba(76, 175, 80, 0.4);
+            }
+
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 12px 28px rgba(76, 175, 80, 0.6);
+            }
         }
 
         .btn-start-video:hover {
@@ -480,9 +585,17 @@
             border-color: var(--primary);
         }
 
-        .difficulty-btn.easy { color: var(--success); }
-        .difficulty-btn.medium { color: var(--warning); }
-        .difficulty-btn.hard { color: var(--danger); }
+        .difficulty-btn.easy {
+            color: var(--success);
+        }
+
+        .difficulty-btn.medium {
+            color: var(--warning);
+        }
+
+        .difficulty-btn.hard {
+            color: var(--danger);
+        }
 
         .modal {
             display: none;
@@ -723,7 +836,12 @@
             font-style: italic;
         }
     </style>
-<script type="text/javascript" nonce="68b78f9716914a06b2db7fdc4d3" src="//injections.adguard.org?ts=1768222486918&amp;type=content-script&amp;dmn=ppl-ai-code-interpreter-files.s3.amazonaws.com&amp;url=https%3A%2F%2Fppl-ai-code-interpreter-files.s3.amazonaws.com%2Fweb%2Fdirect-files%2Fe9512fca4a5590daaea861c0acca31dc%2F86cdf302-22ef-4723-9688-b2dedcbac61d%2F24df75c2.html%3Fresponse-content-disposition%3Dattachment%253B%2520filename%253Dyoutube_game_hidden.html%253B%2520filename%252A%253DUTF-8%2527%2527youtube_game_hidden.html%26AWSAccessKeyId%3DASIA2F3EMEYE2ZLR3KJQ%26Signature%3DCxzs1%252Bo4L8A86JGAOj5F%252FxzqBe0%253D%26x-amz-security-token%3DIQoJb3JpZ2luX2VjECUaCXVzLWVhc3QtMSJIMEYCIQDC7ln9M5JAe3MP7k4grYoEU5M8Sg4v%252FH4telk6b%252BX%252FpgIhAIH0XmYiJRm%252BLJt6NZfiCeWUbDd4F%252BeL8hkLkrcFGwvnKvwECO7%252F%252F%252F%252F%252F%252F%252F%252F%252F%252FwEQARoMNjk5NzUzMzA5NzA1IgxjprVt1TM0444mzsUq0ARaBHWLvQViKnYrm4vWxadUMhYwKtf9rdXkQXRoBweM5bn9v2AAylr2yVbZi4RY0FlHFop860Z3JXI7T5X5xHfrLCKo4IKG8YmDoirZv9D4DpefI7AzYDRv9GVNXmnnXd0zE0GHmSeQvzVoisGmyNINw13x0jSNY0kb4ieSw94fsmLdUhwLyRWINkAow%252FOnVh6G0iKQRW2669P7v7Ib4V%252BJ%252F6%252BWUniWKrc%252BgNJAbdSEhpsiHxnHHSwkGbuZvQJVmYj2tcaxrI0Yf0fjRdKFMA2ePYuE5g0mD6SIeo5FqOl4xcFNOmxtjUFEXdGZNDg57r5Z6NRAD82pIiQvdraAZFR%252FwOoTAs51bxORln5t9JZWxYcibBEdOftzWZe%252F2LN2hv4qe8GFkDugFMgT160tjmm5mOOOrIjz%252F0KH5K%252FKEQf%252FqxWAfhVO6%252BRqEzMK45JD0Cpis7irck9vDaDJbZTh%252F8SGapP26guN9jix%252FAxzU5V1yhgvKfUGd%252FEiV7oSwpbaSB6QE7R%252FrVlnliSUhif9MRcJ0%252BlgPmgr%252FZUw24RFs6Z9iQkGuLPqfa7oJJdpWoKw5JAmpGu9%252Fb8menheKjEevGXBvREdevIj9Elmmm7vitbdJPDiFNEFG%252FeRERafpBIhKJ3z82g%252FKikHUBbQfppluyrv0WtfEKlyxs4qRdT4mbQrllhEnHGtBcGfmooi5PV%252Fw%252FTYs5Skbqv273xFxcDnqghfgttQeWwdXAB2KajtL%252FCWHuec031EBC6LJTCZGuEbZsgHYmbVS4WLHuj5%252F%252FaICxYyMPXdk8sGOpcBIW7Y%252FerfW7prjyokpYo4oVkb%252BOjDTQcSp1DAalEUUONyrqHj6I2ouvw7HkAYZhxeodnQIBeli9sGk0yFvNqOtNLjLtkxcJD8J7w7CXb2Vtpoh9uH9KsEV2DGOvpIHhUIe1Oc1oWIHfJv%252BGbOc%252B8e%252FvAUQ5ZaJvZ5%252Bz%252Bzmqw7uyRbIZJwrkGRMZEu%252BKlrLz2aAc9T0FnLoA%253D%253D%26Expires%3D1768224310&amp;app=comet.exe&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1&amp;stealth=1&amp;st-push&amp;st-loc&amp;st-dnt&amp;st-1pcttl=4320"></script><script type="text/javascript" nonce="68b78f9716914a06b2db7fdc4d3" src="//injections.adguard.org?ts=1768222486918&amp;name=AdGuard%20Assistant&amp;name=AdGuard%20Extra&amp;name=AdGuard%20Popup%20Blocker&amp;name=Web%20of%20Trust&amp;type=user-script"></script></head>
+    <script type="text/javascript" nonce="68b78f9716914a06b2db7fdc4d3"
+        src="//injections.adguard.org?ts=1768222486918&amp;type=content-script&amp;dmn=ppl-ai-code-interpreter-files.s3.amazonaws.com&amp;url=https%3A%2F%2Fppl-ai-code-interpreter-files.s3.amazonaws.com%2Fweb%2Fdirect-files%2Fe9512fca4a5590daaea861c0acca31dc%2F86cdf302-22ef-4723-9688-b2dedcbac61d%2F24df75c2.html%3Fresponse-content-disposition%3Dattachment%253B%2520filename%253Dyoutube_game_hidden.html%253B%2520filename%252A%253DUTF-8%2527%2527youtube_game_hidden.html%26AWSAccessKeyId%3DASIA2F3EMEYE2ZLR3KJQ%26Signature%3DCxzs1%252Bo4L8A86JGAOj5F%252FxzqBe0%253D%26x-amz-security-token%3DIQoJb3JpZ2luX2VjECUaCXVzLWVhc3QtMSJIMEYCIQDC7ln9M5JAe3MP7k4grYoEU5M8Sg4v%252FH4telk6b%252BX%252FpgIhAIH0XmYiJRm%252BLJt6NZfiCeWUbDd4F%252BeL8hkLkrcFGwvnKvwECO7%252F%252F%252F%252F%252F%252F%252F%252F%252F%252FwEQARoMNjk5NzUzMzA5NzA1IgxjprVt1TM0444mzsUq0ARaBHWLvQViKnYrm4vWxadUMhYwKtf9rdXkQXRoBweM5bn9v2AAylr2yVbZi4RY0FlHFop860Z3JXI7T5X5xHfrLCKo4IKG8YmDoirZv9D4DpefI7AzYDRv9GVNXmnnXd0zE0GHmSeQvzVoisGmyNINw13x0jSNY0kb4ieSw94fsmLdUhwLyRWINkAow%252FOnVh6G0iKQRW2669P7v7Ib4V%252BJ%252F6%252BWUniWKrc%252BgNJAbdSEhpsiHxnHHSwkGbuZvQJVmYj2tcaxrI0Yf0fjRdKFMA2ePYuE5g0mD6SIeo5FqOl4xcFNOmxtjUFEXdGZNDg57r5Z6NRAD82pIiQvdraAZFR%252FwOoTAs51bxORln5t9JZWxYcibBEdOftzWZe%252F2LN2hv4qe8GFkDugFMgT160tjmm5mOOOrIjz%252F0KH5K%252FKEQf%252FqxWAfhVO6%252BRqEzMK45JD0Cpis7irck9vDaDJbZTh%252F8SGapP26guN9jix%252FAxzU5V1yhgvKfUGd%252FEiV7oSwpbaSB6QE7R%252FrVlnliSUhif9MRcJ0%252BlgPmgr%252FZUw24RFs6Z9iQkGuLPqfa7oJJdpWoKw5JAmpGu9%252Fb8menheKjEevGXBvREdevIj9Elmmm7vitbdJPDiFNEFG%252FeRERafpBIhKJ3z82g%252FKikHUBbQfppluyrv0WtfEKlyxs4qRdT4mbQrllhEnHGtBcGfmooi5PV%252Fw%252FTYs5Skbqv273xFxcDnqghfgttQeWwdXAB2KajtL%252FCWHuec031EBC6LJTCZGuEbZsgHYmbVS4WLHuj5%252F%252FaICxYyMPXdk8sGOpcBIW7Y%252FerfW7prjyokpYo4oVkb%252BOjDTQcSp1DAalEUUONyrqHj6I2ouvw7HkAYZhxeodnQIBeli9sGk0yFvNqOtNLjLtkxcJD8J7w7CXb2Vtpoh9uH9KsEV2DGOvpIHhUIe1Oc1oWIHfJv%252BGbOc%252B8e%252FvAUQ5ZaJvZ5%252Bz%252Bzmqw7uyRbIZJwrkGRMZEu%252BKlrLz2aAc9T0FnLoA%253D%253D%26Expires%3D1768224310&amp;app=comet.exe&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1&amp;stealth=1&amp;st-push&amp;st-loc&amp;st-dnt&amp;st-1pcttl=4320"></script>
+    <script type="text/javascript" nonce="68b78f9716914a06b2db7fdc4d3"
+        src="//injections.adguard.org?ts=1768222486918&amp;name=AdGuard%20Assistant&amp;name=AdGuard%20Extra&amp;name=AdGuard%20Popup%20Blocker&amp;name=Web%20of%20Trust&amp;type=user-script"></script>
+</head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -754,48 +872,33 @@
             <div class="video-container" id="videoContainer">
                 <div class="video-wrapper">
                     <div class="video-hidden" id="videoHidden">
-                        <div class="video-hidden-icon">🎬</div>
-                        <div class="video-hidden-text">Video ist versteckt</div>
+                        <div class="video-hidden-icon">�</div>
+                        <div class="video-hidden-text">Audio bereit zum Abspielen</div>
                     </div>
-                    <iframe 
-                        id="youtubePlayer" 
-                        class="video-player" 
-                        src="" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowfullscreen=""
-                    ></iframe>
+                    <div class="audio-playing hidden" id="audioPlaying">
+                        <div class="audio-icon">🎧</div>
+                        <div class="audio-text">♪ Audio läuft ♪</div>
+                        <div class="audio-hint">Höre genau hin und rate das Lied!</div>
+                    </div>
+                    <iframe id="youtubePlayer" class="video-player" src=""
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen=""></iframe>
                     <div class="video-overlay active" id="videoOverlay"></div>
                 </div>
             </div>
 
             <div class="start-button-section">
                 <button class="btn-start-video" id="startVideoBtn" onclick="startVideo()">
-                    ▶️ VIDEO STARTEN
+                    🎵 AUDIO STARTEN
                 </button>
             </div>
 
-            <div class="visibility-section hidden" id="visibilitySection">
-                <div class="visibility-label">
-                    <span>🎥 Video-Sichtbarkeit:</span>
-                    <span id="visibilityPercent">50%</span>
-                </div>
-                <input 
-                    type="range" 
-                    class="visibility-slider" 
-                    id="visibilitySlider" 
-                    min="10" 
-                    max="90" 
-                    value="50"
-                    step="5"
-                >
-                <div style="font-size: 0.85em; color: #666; margin-top: 10px; text-align: center;">
-                    Schiebe den Regler um das Video deutlicher zu sehen
-                </div>
-            </div>
+
 
             <div class="hint-section disabled" id="hintSection">
                 <div>
-                    <button class="btn-secondary btn-small hint-button" id="revealHintBtn" onclick="revealHint()">💡 Hinweis abholen</button>
+                    <button class="btn-secondary btn-small hint-button" id="revealHintBtn" onclick="revealHint()">💡
+                        Hinweis abholen</button>
                     <span class="hints-remaining" id="hintsRemaining">Hinweise übrig: 3</span>
                 </div>
                 <div id="hintDisplay" style="margin-top: 10px; font-style: italic; color: #1976D2;"></div>
@@ -806,14 +909,8 @@
                     <div class="form-group">
                         <label for="answerInput">Deine Antwort:</label>
                         <div class="input-group" style="position: relative;">
-                            <input 
-                                type="text" 
-                                id="answerInput" 
-                                placeholder="Gib den Anime-Namen ein..."
-                                autocomplete="off"
-                                disabled
-                                oninput="updateAutocomplete()"
-                            >
+                            <input type="text" id="answerInput" placeholder="Gib den Anime-Namen ein..."
+                                autocomplete="off" disabled oninput="updateAutocomplete()">
                             <button type="submit" class="btn-primary" id="submitBtn" disabled>Absenden</button>
                             <div class="autocomplete-list" id="autocompleteList"></div>
                         </div>
@@ -847,10 +944,11 @@
         <div class="admin-panel" id="adminPanel">
             <div class="content">
                 <h2 style="margin-bottom: 20px;">⚙️ Admin Panel</h2>
-                
+
                 <div class="admin-tabs">
                     <button class="admin-tab active" onclick="switchAdminTab('add')">Neuer Eintrag</button>
                     <button class="admin-tab" onclick="switchAdminTab('manage')">Verwalten</button>
+                    <button class="admin-tab" onclick="switchAdminTab('settings')">Einstellungen</button>
                     <button class="admin-tab" onclick="switchAdminTab('export')">Daten</button>
                 </div>
 
@@ -863,12 +961,8 @@
 
                         <div class="form-group">
                             <label for="youtubeInput">YouTube-Link:</label>
-                            <input 
-                                type="text" 
-                                id="youtubeInput" 
-                                placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-                                required
-                            >
+                            <input type="text" id="youtubeInput"
+                                placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ" required>
                             <div class="youtube-info">
                                 📋 Kopiere einfach den YouTube-Link aus der Adressleiste
                             </div>
@@ -876,14 +970,7 @@
 
                         <div class="form-group">
                             <label for="difficultyInput">Schwierigkeitsgrad (1-10):</label>
-                            <input 
-                                type="number" 
-                                id="difficultyInput" 
-                                min="1" 
-                                max="10" 
-                                value="5"
-                                required
-                            >
+                            <input type="number" id="difficultyInput" min="1" max="10" value="5" required>
                         </div>
 
                         <button type="submit" class="btn-primary btn-full">
@@ -898,17 +985,71 @@
                     </div>
                 </div>
 
+                <div id="settingsTab" class="admin-tab-content">
+                    <h3 style="margin-bottom: 20px;">⚙️ Spieleinstellungen</h3>
+
+                    <div class="form-group">
+                        <label style="font-size: 1.1em; margin-bottom: 15px; display: block;">
+                            <strong>Spielmodus:</strong>
+                        </label>
+                        <div class="difficulty-section" style="margin: 0;">
+                            <button class="difficulty-btn" id="audioModeBtn" onclick="setGameMode('audio')"
+                                style="flex: 1;">
+                                🎵 Nur Audio
+                            </button>
+                            <button class="difficulty-btn" id="videoModeBtn" onclick="setGameMode('video')"
+                                style="flex: 1;">
+                                🎬 Video (verschwommen)
+                            </button>
+                        </div>
+                        <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                            Wähle ob Spieler nur Audio hören oder ein verschwommenes Video sehen
+                        </p>
+                    </div>
+
+                    <div class="form-group" id="blurSettings" style="margin-top: 30px;">
+                        <label style="font-size: 1.1em; margin-bottom: 15px; display: block;">
+                            <strong>🌫️ Verschwommenheit (Blur):</strong>
+                            <span id="blurValue" style="color: var(--primary);">15px</span>
+                        </label>
+                        <input type="range" class="visibility-slider" id="blurSlider" min="0" max="30" value="15"
+                            step="1" oninput="updateBlurSetting(this.value)">
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 0.85em; color: #666; margin-top: 5px;">
+                            <span>Kein Blur</span>
+                            <span>Stark verwischt</span>
+                        </div>
+                        <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                            0px = Video klar sichtbar | 30px = Sehr stark verschwommen
+                        </p>
+                    </div>
+
+                    <div
+                        style="margin-top: 30px; padding: 20px; background: #f0f7ff; border-radius: 8px; border-left: 4px solid var(--secondary);">
+                        <h4 style="color: var(--secondary); margin-bottom: 10px;">ℹ️ Aktuelle Einstellung:</h4>
+                        <p id="currentModeSummary" style="margin: 5px 0;"><strong>Modus:</strong> Nur Audio</p>
+                        <p id="currentBlurSummary" style="margin: 5px 0;"><strong>Blur:</strong> 15px (wird nur im
+                            Video-Modus angewendet)</p>
+                    </div>
+
+                    <button class="btn-success btn-full" onclick="saveSettings()" style="margin-top: 20px;">
+                        💾 Einstellungen speichern
+                    </button>
+                </div>
+
                 <div id="exportTab" class="admin-tab-content">
                     <h3 style="margin-bottom: 20px;">Datenmanagement</h3>
-                    
+
                     <button class="btn-secondary btn-full" onclick="exportData()" style="margin-bottom: 15px;">
                         📥 Daten exportieren (JSON)
                     </button>
 
-                    <button class="btn-secondary btn-full" onclick="document.getElementById('importFile').click()" style="margin-bottom: 15px;">
+                    <button class="btn-secondary btn-full" onclick="document.getElementById('importFile').click()"
+                        style="margin-bottom: 15px;">
                         📤 Daten importieren
                     </button>
-                    <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
+                    <input type="file" id="importFile" accept=".json" style="display:none;"
+                        onchange="importData(event)">
 
                     <button class="btn-danger btn-full" onclick="resetData()">
                         🗑️ Alle Daten löschen (NICHT RÜCKGÄNGIG!)
@@ -942,6 +1083,12 @@
     <script>
         const ADMIN_PASSWORD = 'admin123';
         const STORAGE_KEY = 'animeYoutubeGameData';
+        const SETTINGS_KEY = 'animeYoutubeGameSettings';
+
+        let gameSettings = {
+            mode: 'audio',  // 'audio' or 'video'
+            blurIntensity: 15  // 0-30px
+        };
 
         let gameState = {
             currentItem: null,
@@ -963,6 +1110,7 @@
 
         function init() {
             loadGameData();
+            loadSettings();
             createDefaultData();
             startNewGame();
             setupEventListeners();
@@ -970,7 +1118,6 @@
 
         function setupEventListeners() {
             document.getElementById('addContentForm').addEventListener('submit', addContent);
-            document.getElementById('visibilitySlider').addEventListener('input', updateVisibility);
         }
 
         function startVideo() {
@@ -978,29 +1125,33 @@
 
             gameState.videoStarted = true;
 
-            document.getElementById('videoHidden').classList.add('hidden');
-            document.getElementById('videoOverlay').classList.remove('active');
-            document.getElementById('youtubePlayer').classList.add('active');
-            document.getElementById('visibilitySection').classList.remove('hidden');
+            // Audio-Only Modus
+            if (gameSettings.mode === 'audio') {
+                document.getElementById('videoHidden').classList.add('hidden');
+                document.getElementById('audioPlaying').classList.remove('hidden');
+                document.getElementById('youtubePlayer').classList.add('active');
+            }
+            // Video-Modus mit Blur
+            else {
+                document.getElementById('videoHidden').classList.add('hidden');
+                document.getElementById('audioPlaying').classList.add('hidden');
+                const player = document.getElementById('youtubePlayer');
+                player.classList.add('active');
+                player.style.opacity = '1';
+                player.style.filter = `blur(${gameSettings.blurIntensity}px)`;
+            }
+
+            // Aktiviere Formular und Hinweise
             document.getElementById('hintSection').classList.remove('disabled');
             document.getElementById('formSection').classList.remove('disabled');
             document.getElementById('answerInput').disabled = false;
             document.getElementById('submitBtn').disabled = false;
             document.getElementById('startVideoBtn').style.display = 'none';
 
-            updateVisibility({ target: document.getElementById('visibilitySlider') });
-
             document.getElementById('answerInput').focus();
         }
 
-        function updateVisibility(e) {
-            const visibility = parseInt(e.target.value);
-            gameState.visibility = visibility;
-            document.getElementById('visibilityPercent').textContent = visibility + '%';
-            
-            const opacity = 1 - (visibility / 100);
-            document.getElementById('videoOverlay').style.opacity = opacity;
-        }
+
 
         function loadGameData() {
             const stored = localStorage.getItem(STORAGE_KEY);
@@ -1068,13 +1219,21 @@
             document.getElementById('nextGameBtn').style.display = 'none';
             document.getElementById('autocompleteList').classList.remove('active');
 
+            // Reset zu Bereit-Zustand
             document.getElementById('videoHidden').classList.remove('hidden');
-            document.getElementById('videoOverlay').classList.add('active');
-            document.getElementById('youtubePlayer').classList.remove('active');
-            document.getElementById('visibilitySection').classList.add('hidden');
+            document.getElementById('audioPlaying').classList.add('hidden');
+
+            const player = document.getElementById('youtubePlayer');
+            player.classList.remove('active');
+            player.style.opacity = '0';
+            player.style.filter = 'none';
+
             document.getElementById('hintSection').classList.add('disabled');
             document.getElementById('formSection').classList.add('disabled');
             document.getElementById('startVideoBtn').style.display = 'block';
+
+            // Update Button Text basierend auf Modus
+            updateStartButtonText();
 
             loadGameContent();
             updateStats();
@@ -1082,7 +1241,7 @@
 
         function filterItems() {
             let filtered = gameData.items;
-            
+
             if (gameState.currentDifficulty !== 'all') {
                 filtered = filtered.filter(item => {
                     if (gameState.currentDifficulty === 'easy') return item.difficulty <= 3;
@@ -1091,7 +1250,7 @@
                     return true;
                 });
             }
-            
+
             return filtered;
         }
 
@@ -1102,7 +1261,8 @@
             const youtubePlayer = document.getElementById('youtubePlayer');
 
             if (youtubeLink) {
-                youtubePlayer.src = youtubeLink;
+                const autoplayUrl = youtubeLink + (youtubeLink.includes('?') ? '&' : '?') + 'autoplay=1&mute=1';
+                youtubePlayer.src = autoplayUrl;
             }
 
             document.getElementById('hintDisplay').textContent = '';
@@ -1117,7 +1277,7 @@
                 return;
             }
 
-            const filteredItems = gameData.items.filter(item => 
+            const filteredItems = gameData.items.filter(item =>
                 item.title.toLowerCase().startsWith(input)
             );
 
@@ -1239,7 +1399,12 @@
             document.querySelectorAll('.difficulty-btn').forEach(btn => {
                 btn.classList.remove('selected');
             });
-            event.target.classList.add('selected');
+
+            const activeBtn = Array.from(document.querySelectorAll('.difficulty-btn')).find(
+                btn => btn.textContent.trim().toLowerCase().includes(difficulty) ||
+                    (difficulty === 'all' && btn.classList.contains('all-difficulties'))
+            );
+            if (activeBtn) activeBtn.classList.add('selected');
 
             startNewGame();
         }
@@ -1268,11 +1433,21 @@
             document.querySelectorAll('.admin-tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.admin-tab-content').forEach(content => content.classList.remove('active'));
 
-            event.target.classList.add('active');
+            const clickedTab = Array.from(document.querySelectorAll('.admin-tab')).find(
+                tab => tab.textContent.toLowerCase().includes(
+                    tabName === 'add' ? 'neu' :
+                        tabName === 'manage' ? 'verwalten' :
+                            tabName === 'settings' ? 'einstellungen' : 'daten'
+                )
+            );
+            if (clickedTab) clickedTab.classList.add('active');
+
             document.getElementById(tabName + 'Tab').classList.add('active');
 
             if (tabName === 'manage') {
                 refreshManageTab();
+            } else if (tabName === 'settings') {
+                loadSettingsUI();
             }
         }
 
@@ -1486,6 +1661,103 @@
             }, 4000);
         }
 
+        // ===== SETTINGS FUNCTIONS =====
+
+        function loadSettings() {
+            const stored = localStorage.getItem(SETTINGS_KEY);
+            if (stored) {
+                try {
+                    gameSettings = JSON.parse(stored);
+                } catch (e) {
+                    console.error('Fehler beim Laden der Einstellungen:', e);
+                }
+            }
+            updateStartButtonText();
+        }
+
+        function saveSettings() {
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(gameSettings));
+            showMessage('Einstellungen gespeichert!', 'success');
+            updateStartButtonText();
+        }
+
+        function loadSettingsUI() {
+            // Update Mode Buttons
+            document.getElementById('audioModeBtn').classList.remove('selected');
+            document.getElementById('videoModeBtn').classList.remove('selected');
+
+            if (gameSettings.mode === 'audio') {
+                document.getElementById('audioModeBtn').classList.add('selected');
+            } else {
+                document.getElementById('videoModeBtn').classList.add('selected');
+            }
+
+            // Update Blur Slider
+            document.getElementById('blurSlider').value = gameSettings.blurIntensity;
+            document.getElementById('blurValue').textContent = gameSettings.blurIntensity + 'px';
+
+            // Update Summary
+            updateSettingsSummary();
+        }
+
+        function setGameMode(mode) {
+            gameSettings.mode = mode;
+
+            document.getElementById('audioModeBtn').classList.remove('selected');
+            document.getElementById('videoModeBtn').classList.remove('selected');
+
+            if (mode === 'audio') {
+                document.getElementById('audioModeBtn').classList.add('selected');
+            } else {
+                document.getElementById('videoModeBtn').classList.add('selected');
+            }
+
+            updateSettingsSummary();
+        }
+
+        function updateBlurSetting(value) {
+            gameSettings.blurIntensity = parseInt(value);
+            document.getElementById('blurValue').textContent = value + 'px';
+            updateSettingsSummary();
+        }
+
+        function updateSettingsSummary() {
+            const modeName = gameSettings.mode === 'audio' ? 'Nur Audio' : 'Video (verschwommen)';
+            document.getElementById('currentModeSummary').innerHTML = `<strong>Modus:</strong> ${modeName}`;
+
+            const blurNote = gameSettings.mode === 'audio' ? ' (wird nur im Video-Modus angewendet)' : ' (aktiv)';
+            document.getElementById('currentBlurSummary').innerHTML =
+                `<strong>Blur:</strong> ${gameSettings.blurIntensity}px${blurNote}`;
+        }
+
+        function updateStartButtonText() {
+            const btn = document.getElementById('startVideoBtn');
+            if (gameSettings.mode === 'audio') {
+                btn.innerHTML = '🎵 AUDIO STARTEN';
+            } else {
+                btn.innerHTML = '▶️ VIDEO STARTEN';
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            // ESC to close modals
+            if (e.key === 'Escape') {
+                const resultModal = document.getElementById('resultModal');
+                if (resultModal.classList.contains('active')) {
+                    closeResultModal();
+                }
+            }
+
+            // Enter to start video or submit
+            if (e.key === 'Enter' && e.target.id !== 'answerInput') {
+                const startBtn = document.getElementById('startVideoBtn');
+                if (startBtn.style.display !== 'none' && !gameState.videoStarted) {
+                    startVideo();
+                }
+            }
+        });
+
         document.addEventListener('click', (e) => {
             if (e.target.id !== 'answerInput') {
                 document.getElementById('autocompleteList').classList.remove('active');
@@ -1495,4 +1767,5 @@
         init();
     </script>
 </body>
+
 </html>
