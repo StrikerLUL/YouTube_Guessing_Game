@@ -1125,6 +1125,14 @@
 
             gameState.videoStarted = true;
 
+            // Lade das Video erst jetzt mit Autoplay
+            const youtubeLink = gameState.currentItem.youtube;
+            const youtubePlayer = document.getElementById('youtubePlayer');
+            if (youtubeLink) {
+                const autoplayUrl = youtubeLink + (youtubeLink.includes('?') ? '&' : '?') + 'autoplay=1';
+                youtubePlayer.src = autoplayUrl;
+            }
+
             // Audio-Only Modus
             if (gameSettings.mode === 'audio') {
                 document.getElementById('videoHidden').classList.add('hidden');
@@ -1257,13 +1265,9 @@
         function loadGameContent() {
             if (!gameState.currentItem) return;
 
-            const youtubeLink = gameState.currentItem.youtube;
+            // Lösche die Video-URL damit nichts automatisch abspielt
             const youtubePlayer = document.getElementById('youtubePlayer');
-
-            if (youtubeLink) {
-                const autoplayUrl = youtubeLink + (youtubeLink.includes('?') ? '&' : '?') + 'autoplay=1&mute=1';
-                youtubePlayer.src = autoplayUrl;
-            }
+            youtubePlayer.src = '';
 
             document.getElementById('hintDisplay').textContent = '';
         }
@@ -1277,22 +1281,33 @@
                 return;
             }
 
+            // Filter items that contain the input text
             const filteredItems = gameData.items.filter(item =>
-                item.title.toLowerCase().startsWith(input)
+                item.title.toLowerCase().includes(input)
             );
+
+            console.log('Autocomplete: Input="' + input + '", Found ' + filteredItems.length + ' items');
 
             if (filteredItems.length === 0) {
                 autocompleteList.classList.remove('active');
                 return;
             }
 
-            autocompleteList.innerHTML = filteredItems.map(item => `
-                <div class="autocomplete-item" onclick="selectAutocomplete('${item.title}')">
-                    ${item.title}
-                </div>
-            `).join('');
+            // Clear previous items
+            autocompleteList.innerHTML = '';
+
+            // Limit to 10 results and create autocomplete items
+            const displayItems = filteredItems.slice(0, 10);
+            displayItems.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'autocomplete-item';
+                div.textContent = item.title;
+                div.onclick = () => selectAutocomplete(item.title);
+                autocompleteList.appendChild(div);
+            });
 
             autocompleteList.classList.add('active');
+            console.log('Autocomplete: Showing ' + displayItems.length + ' suggestions');
         }
 
         function selectAutocomplete(title) {
