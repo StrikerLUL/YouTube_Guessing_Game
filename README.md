@@ -13,6 +13,7 @@
 ### 🎮 Game Modes
 - **🎧 Audio-Only Mode**: The ultimate challenge! Video is completely hidden. Guess the anime solely by its music.
 - **🎬 Video Mode with Blur**: Adjustable blur intensity (0-30px). See a fuzzy outline or just colors while listening.
+- **👥 Local Multiplayer**: Play with 2-4 players on one device. Automatic player rotation and a final scoreboard included!
 - **⚙️ Configurable**: Admins can switch modes and adjust difficulty on the fly.
 
 ### 🎨 Modern Design
