@@ -1,0 +1,74 @@
+{
+  "items": [
+    {
+      "id": 1,
+      "title": "Inception",
+      "youtube": "https://www.youtube.com/embed/8hP9D6kZseM",
+      "difficulty": 3,
+      "hints": ["A dream within a dream", "Spinning top", "Leonardo DiCaprio"]
+    },
+    {
+      "id": 2,
+      "title": "The Matrix",
+      "youtube": "https://www.youtube.com/embed/vKQi3bBA1y8",
+      "difficulty": 2,
+      "hints": ["Red pill or blue pill", "There is no spoon", "Keanu Reeves"]
+    },
+    {
+      "id": 3,
+      "title": "Interstellar",
+      "youtube": "https://www.youtube.com/embed/zSWdZVtXT7E",
+      "difficulty": 4,
+      "hints": ["Black hole", "Wormhole", "Matthew McConaughey"]
+    },
+    {
+      "id": 4,
+      "title": "The Dark Knight",
+      "youtube": "https://www.youtube.com/embed/EXeTwQWrcwY",
+      "difficulty": 2,
+      "hints": ["Why so serious?", "Joker", "Batman"]
+    },
+    {
+      "id": 5,
+      "title": "Avatar",
+      "youtube": "https://www.youtube.com/embed/5PSNL1qE6VY",
+      "difficulty": 2,
+      "hints": ["Blue aliens", "Pandora", "James Cameron"]
+    },
+    {
+      "id": 6,
+      "title": "Pulp Fiction",
+      "youtube": "https://www.youtube.com/embed/s7EdQ4FqbhY",
+      "difficulty": 4,
+      "hints": ["Royale with Cheese", "Quentin Tarantino", "John Travolta and Samuel L. Jackson"]
+    },
+    {
+      "id": 7,
+      "title": "Fight Club",
+      "youtube": "https://www.youtube.com/embed/qtRKdVHc-cE",
+      "difficulty": 3,
+      "hints": ["First rule is you do not talk about it", "Brad Pitt", "Soap"]
+    },
+    {
+      "id": 8,
+      "title": "Forrest Gump",
+      "youtube": "https://www.youtube.com/embed/bLvqoHBptjg",
+      "difficulty": 2,
+      "hints": ["Life is like a box of chocolates", "Run, Forrest, Run!", "Tom Hanks"]
+    },
+    {
+      "id": 9,
+      "title": "Jurassic Park",
+      "youtube": "https://www.youtube.com/embed/QDatC4RGEHg",
+      "difficulty": 2,
+      "hints": ["Dinosaurs", "Welcome to...", "Steven Spielberg"]
+    },
+    {
+      "id": 10,
+      "title": "The Godfather",
+      "youtube": "https://www.youtube.com/embed/sY1S34973zA",
+      "difficulty": 3,
+      "hints": ["I'm gonna make him an offer he can't refuse", "Mafia", "Marlon Brando"]
+    }
+  ]
+}
