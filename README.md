@@ -23,7 +23,7 @@
 - **Typography**: Uses 'Inter' Google Font for a crisp, readable look.
 
 ### 🕹️ Gameplay
-- **⏱️ Timer System**: 30-second countdown for each round. Can you guess fast enough?
+- **⏱️ Timer System**: Optional countdown for each round (30, 60, 90 seconds, or Off). Shown as a sleek animated circle. Can you guess fast enough?
 - **⚡ Speed Bonus**: Earn more points by guessing quickly!
 - **⏭️ Skip Button**: Stuck? Skip the current anime and move to the next.
 - **🏆 High Scores**: Compete against yourself with the built-in local leaderboard.
@@ -43,6 +43,7 @@ Manage your game content with a powerful, built-in admin dashboard.
 ### ⚙️ Settings
 - **Toggle Game Mode**: Switch between Audio-Only and Video.
 - **Blur Control**: Precise slider for video blur intensity.
+- **Timer Settings**: Change the timer duration (Off, 30s, 60s, 90s) per track.
 - **Data Persistence**: All settings and custom entries are saved to LocalStorage.
 
 ### 📼 Content Management
