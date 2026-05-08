@@ -1377,6 +1377,13 @@
 
             // Lade das Video erst jetzt mit Autoplay
             const youtubeLink = gameState.currentItem.youtube;
+
+            if (!youtubeLink) {
+                showMessage('Error: Missing YouTube link for this entry! Skipping...', 'error');
+                setTimeout(() => skipGame(), 1500);
+                return;
+            }
+
             const youtubePlayer = document.getElementById('youtubePlayer');
             if (youtubeLink) {
                 const autoplayUrl = youtubeLink + (youtubeLink.includes('?') ? '&' : '?') + 'autoplay=1';
@@ -1505,10 +1512,20 @@
             document.getElementById('timerCircle').style.stroke = 'var(--primary)';
             document.getElementById('timerTextDisplay').textContent = gameSettings.timerDuration || '30';
 
-            const filteredItems = filterItems();
+            let filteredItems = filterItems();
             if (filteredItems.length === 0) {
-                showMessage('No entries available for this difficulty!', 'warning');
-                return;
+                showMessage('No entries available for this difficulty! Loading defaults...', 'warning');
+                createDefaultData();
+                gameState.currentDifficulty = 'all';
+
+                // Update UI button selection
+                document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+                const allBtn = document.querySelector('.difficulty-btn.all-difficulties');
+                if (allBtn) allBtn.classList.add('selected');
+
+                filteredItems = filterItems();
             }
 
             gameState.currentItem = filteredItems[Math.floor(Math.random() * filteredItems.length)];
@@ -1612,10 +1629,16 @@
             if (e && e.preventDefault) e.preventDefault();
             if (gameState.gameOver || !gameState.videoStarted) return;
 
-            clearInterval(gameState.timerInterval);
-
             const input = document.getElementById('answerInput');
             const answer = input.value.trim().toLowerCase();
+
+            // If the user submitted empty answer but timer is not out
+            if (answer === '' && gameState.timeLeft > 0) {
+                showMessage('Please enter an anime name before submitting!', 'warning');
+                return;
+            }
+
+            clearInterval(gameState.timerInterval);
 
             // If it's a timeout (no answer), answer will be empty
             gameState.gameOver = true;
