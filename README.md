@@ -1,6 +1,6 @@
 # 🎌 Anime YouTube Guessing Game Pro
 
-![Version](https://img.shields.io/badge/version-2.1.0-blue.svg?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-2.2.0-blue.svg?style=for-the-badge)
 ![Status](https://img.shields.io/badge/status-active-success.svg?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge)
 
@@ -23,6 +23,11 @@
 - **Typography**: Uses 'Inter' Google Font for a crisp, readable look.
 
 ### 🕹️ Gameplay
+- **⏱️ Timer System**: 30-second countdown for each round. Can you guess fast enough?
+- **⚡ Speed Bonus**: Earn more points by guessing quickly!
+- **⏭️ Skip Button**: Stuck? Skip the current anime and move to the next.
+- **🏆 High Scores**: Compete against yourself with the built-in local leaderboard.
+- **✨ Visual Effects**: Confetti on wins and a shake effect on misses for better feedback.
 - **Smart Autocomplete**: Type and get instant suggestions without any clipping issues.
 - **Robust Video Support**: Improved YouTube link recognition, including Shorts and mobile links.
 - **Hint System**: Stuck? Reveal up to 3 hints to help you guess.

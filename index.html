@@ -1013,6 +1013,7 @@
                             <input type="text" id="answerInput" placeholder="Enter the anime name..."
                                 autocomplete="off" disabled oninput="updateAutocomplete()">
                             <button type="submit" class="btn-primary" id="submitBtn" disabled>Submit</button>
+                            <button type="button" class="btn-secondary" id="skipBtn" onclick="skipGame()" disabled>Skip</button>
                             <div class="autocomplete-list" id="autocompleteList"></div>
                         </div>
                     </div>
@@ -1022,6 +1023,14 @@
             <button class="btn-success btn-full" id="nextGameBtn" onclick="startNewGame()" style="display:none;">
                 ▶️ Next Game
             </button>
+
+            <!-- Leaderboard Section -->
+            <div id="leaderboardSection" style="margin-top: 40px; text-align: center;">
+                <h3 style="margin-bottom: 15px;">🏆 High Scores</h3>
+                <div id="leaderboardList" style="max-width: 400px; margin: 0 auto;">
+                    <p style="color: #999;">No high scores yet. Start playing!</p>
+                </div>
+            </div>
 
             <div style="margin-top: 40px; text-align: center;">
                 <h3 style="margin-bottom: 15px;">Filter by Difficulty:</h3>
@@ -1242,6 +1251,7 @@
             createDefaultData();
             // Don't start game immediately, show start screen
             setupEventListeners();
+            updateLeaderboardUI();
         }
 
         function selectMode(mode) {
@@ -1329,9 +1339,11 @@
             document.getElementById('formSection').classList.remove('disabled');
             document.getElementById('answerInput').disabled = false;
             document.getElementById('submitBtn').disabled = false;
+            document.getElementById('skipBtn').disabled = false;
             document.getElementById('startVideoBtn').style.display = 'none';
 
             document.getElementById('answerInput').focus();
+            startTimer();
         }
 
 
@@ -1350,6 +1362,25 @@
 
         function saveGameData() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
+
+            // Handle High Scores
+            if (gameState.score > 0) {
+                const storedScores = localStorage.getItem('animeYoutubeHighScores');
+                let scores = storedScores ? JSON.parse(storedScores) : [];
+
+                scores.push({
+                    score: gameState.score,
+                    date: new Date().toISOString()
+                });
+
+                // Sort and keep top 5
+                scores.sort((a, b) => b.score - a.score);
+                scores = scores.slice(0, 5);
+
+                localStorage.setItem('animeYoutubeHighScores', JSON.stringify(scores));
+                updateLeaderboardUI();
+            }
+
             updateStats();
         }
 
@@ -1400,6 +1431,13 @@
             gameState.hintsRemaining = 3;
             gameState.hintsUsed = 0;
             gameState.videoStarted = false;
+            gameState.timeLeft = 30;
+            clearInterval(gameState.timerInterval);
+
+            // Reset Timer UI
+            document.getElementById('timerBar').style.width = '100%';
+            document.getElementById('timerText').textContent = '30s';
+            document.getElementById('timerContainer').style.display = 'none';
 
             const filteredItems = filterItems();
             if (filteredItems.length === 0) {
@@ -1505,17 +1543,19 @@
         }
 
         function submitAnswer(e) {
-            e.preventDefault();
+            if (e && e.preventDefault) e.preventDefault();
             if (gameState.gameOver || !gameState.videoStarted) return;
+
+            clearInterval(gameState.timerInterval);
 
             const input = document.getElementById('answerInput');
             const answer = input.value.trim().toLowerCase();
 
-            if (!answer) return;
-
+            // If it's a timeout (no answer), answer will be empty
             gameState.gameOver = true;
             input.disabled = true;
             document.getElementById('submitBtn').disabled = true;
+            document.getElementById('skipBtn').disabled = true;
 
             const correct = answer === gameState.currentItem.title.toLowerCase();
 
@@ -1523,7 +1563,8 @@
                 const basePoints = 100;
                 const difficultyBonus = (gameState.currentItem.difficulty || 5) * 5;
                 const hintsBonus = (3 - gameState.hintsUsed) * 10;
-                const points = basePoints + difficultyBonus + hintsBonus;
+                const speedBonus = gameState.timeLeft * 2;
+                const points = basePoints + difficultyBonus + hintsBonus + speedBonus;
 
                 if (gameState.isMultiplayer) {
                     const player = gameState.players[gameState.currentPlayerIndex];
@@ -1533,6 +1574,13 @@
                     gameState.correct++;
                     gameState.score += points;
                 }
+
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#6366f1', '#ec4899', '#10b981']
+                });
 
                 showResultModal(true, `Correct! It is "${gameState.currentItem.title}"`, points);
             } else {
@@ -1609,6 +1657,68 @@
 
         function closeResultModal() {
             document.getElementById('resultModal').classList.remove('active');
+        }
+
+        // New Game Logic Features
+        function startTimer() {
+            clearInterval(gameState.timerInterval);
+            gameState.timeLeft = 30;
+            const timerBar = document.getElementById('timerBar');
+            const timerText = document.getElementById('timerText');
+            const timerContainer = document.getElementById('timerContainer');
+
+            timerContainer.style.display = 'block';
+            timerBar.style.width = '100%';
+            timerText.textContent = '30s';
+
+            gameState.timerInterval = setInterval(() => {
+                gameState.timeLeft--;
+                const percentage = (gameState.timeLeft / 30) * 100;
+                timerBar.style.width = percentage + '%';
+                timerText.textContent = gameState.timeLeft + 's';
+
+                if (gameState.timeLeft <= 0) {
+                    clearInterval(gameState.timerInterval);
+                    submitAnswer(new Event('submit'));
+                }
+            }, 1000);
+        }
+
+        function skipGame() {
+            if (gameState.gameOver || !gameState.videoStarted) return;
+
+            clearInterval(gameState.timerInterval);
+            gameState.gameOver = true;
+            gameState.wrong++;
+
+            document.getElementById('answerInput').disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('skipBtn').disabled = true;
+
+            showResultModal(false, `Skipped! It was "${gameState.currentItem.title}"`, 0);
+
+            updateStats();
+            saveGameData();
+            document.getElementById('nextGameBtn').style.display = 'block';
+        }
+
+        function updateLeaderboardUI() {
+            const leaderboardList = document.getElementById('leaderboardList');
+            const storedScores = localStorage.getItem('animeYoutubeHighScores');
+            let scores = storedScores ? JSON.parse(storedScores) : [];
+
+            if (scores.length === 0) {
+                leaderboardList.innerHTML = '<p style="color: #999;">No high scores yet. Start playing!</p>';
+                return;
+            }
+
+            leaderboardList.innerHTML = scores.map((score, index) => `
+                <div class="leaderboard-item">
+                    <span class="leaderboard-rank">#${index + 1}</span>
+                    <span>${new Date(score.date).toLocaleDateString()}</span>
+                    <span class="leaderboard-score">${score.score} Pkt</span>
+                </div>
+            `).join('');
         }
 
         function updateStats() {
