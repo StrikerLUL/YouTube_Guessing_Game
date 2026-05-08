@@ -1,0 +1,74 @@
+{
+  "items": [
+    {
+      "id": 1,
+      "title": "Breaking Bad",
+      "youtube": "https://www.youtube.com/embed/HhesaQXLuRY",
+      "difficulty": 3,
+      "hints": ["Chemistry teacher", "Crystal meth", "Walter White"]
+    },
+    {
+      "id": 2,
+      "title": "Stranger Things",
+      "youtube": "https://www.youtube.com/embed/b9EkMc79ZSU",
+      "difficulty": 2,
+      "hints": ["1980s", "Upside Down", "Eleven"]
+    },
+    {
+      "id": 3,
+      "title": "Game of Thrones",
+      "youtube": "https://www.youtube.com/embed/KPLWWIOCOOQ",
+      "difficulty": 3,
+      "hints": ["Winter is coming", "Dragons", "Iron Throne"]
+    },
+    {
+      "id": 4,
+      "title": "The Office (US)",
+      "youtube": "https://www.youtube.com/embed/2iKZmRR9AR4",
+      "difficulty": 2,
+      "hints": ["Paper company", "Michael Scott", "Dunder Mifflin"]
+    },
+    {
+      "id": 5,
+      "title": "Friends",
+      "youtube": "https://www.youtube.com/embed/IEEbUzffz1k",
+      "difficulty": 2,
+      "hints": ["Central Perk", "Six friends in NYC", "We were on a break!"]
+    },
+    {
+      "id": 6,
+      "title": "The Mandalorian",
+      "youtube": "https://www.youtube.com/embed/aOC8E8z_ifw",
+      "difficulty": 3,
+      "hints": ["Star Wars universe", "Bounty hunter", "Baby Yoda / Grogu"]
+    },
+    {
+      "id": 7,
+      "title": "Squid Game",
+      "youtube": "https://www.youtube.com/embed/oqxAJKy0ii4",
+      "difficulty": 4,
+      "hints": ["Deadly children's games", "Green tracksuits", "456"]
+    },
+    {
+      "id": 8,
+      "title": "The Boys",
+      "youtube": "https://www.youtube.com/embed/M1bhOaLV4FU",
+      "difficulty": 4,
+      "hints": ["Corrupt superheroes", "Homelander", "Vought International"]
+    },
+    {
+      "id": 9,
+      "title": "Dark",
+      "youtube": "https://www.youtube.com/embed/rrwycJ08PSA",
+      "difficulty": 5,
+      "hints": ["Time travel", "German town of Winden", "Everything is connected"]
+    },
+    {
+      "id": 10,
+      "title": "Peaky Blinders",
+      "youtube": "https://www.youtube.com/embed/oVzVdvGIC7U",
+      "difficulty": 4,
+      "hints": ["Birmingham gang", "Razor blades in caps", "Tommy Shelby"]
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "items": [
+    {
+      "id": 1,
+      "title": "Demon Slayer",
+      "youtube": "https://www.youtube.com/embed/VQGCKyvzIM0",
+      "difficulty": 3,
+      "hints": ["An anime with demons", "The main character wears a mask", "It is about a family"]
+    },
+    {
+      "id": 2,
+      "title": "Attack on Titan",
+      "youtube": "https://www.youtube.com/embed/XMXgHfHxKVM",
+      "difficulty": 4,
+      "hints": ["Giant walls", "Huge creatures", "Strategy and action"]
+    },
+    {
+      "id": 3,
+      "title": "Death Note",
+      "youtube": "https://www.youtube.com/embed/DNaKpV9HnWU",
+      "difficulty": 5,
+      "hints": ["A magical notebook", "A book that causes deaths", "Psychological thriller"]
+    },
+    {
+      "id": 4,
+      "title": "Naruto",
+      "youtube": "https://www.youtube.com/embed/WZsjoEYHiyI",
+      "difficulty": 2,
+      "hints": ["Ninja", "Hidden Leaf Village", "Wants to be Hokage"]
+    },
+    {
+      "id": 5,
+      "title": "One Piece",
+      "youtube": "https://www.youtube.com/embed/S8_YwFLCh4U",
+      "difficulty": 3,
+      "hints": ["Pirates", "Devil Fruit", "Grand Line"]
+    },
+    {
+      "id": 6,
+      "title": "Jujutsu Kaisen",
+      "youtube": "https://www.youtube.com/embed/pkAQA0bX4kE",
+      "difficulty": 4,
+      "hints": ["Curses", "Sorcerers", "Sukuna"]
+    },
+    {
+      "id": 7,
+      "title": "My Hero Academia",
+      "youtube": "https://www.youtube.com/embed/-7AKqjE12xY",
+      "difficulty": 2,
+      "hints": ["Quirks", "Heroes", "All Might"]
+    },
+    {
+      "id": 8,
+      "title": "Fullmetal Alchemist: Brotherhood",
+      "youtube": "https://www.youtube.com/embed/cqjgHKvN8vQ",
+      "difficulty": 4,
+      "hints": ["Alchemy", "Philosopher's Stone", "Two brothers"]
+    },
+    {
+      "id": 9,
+      "title": "Sword Art Online",
+      "youtube": "https://www.youtube.com/embed/6ohZWsqhN5c",
+      "difficulty": 2,
+      "hints": ["Virtual Reality", "Trapped in a game", "Kirito"]
+    },
+    {
+      "id": 10,
+      "title": "Hunter x Hunter",
+      "youtube": "https://www.youtube.com/embed/faqmNf_fZlE",
+      "difficulty": 4,
+      "hints": ["Nen", "Hunters", "Finding his father"]
+    }
+  ]
+}
