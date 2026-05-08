@@ -838,11 +838,72 @@
             margin-top: 8px;
             font-style: italic;
         }
+
+        /* Timer Styles */
+        .timer-container {
+            width: 100%;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .timer-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            transition: width 1s linear;
+        }
+
+        .timer-text {
+            position: absolute;
+            right: 10px;
+            top: -20px;
+            font-size: 0.9em;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* Shake Animation */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .leaderboard-rank {
+            font-weight: 800;
+            color: var(--primary);
+            width: 30px;
+        }
+
+        .leaderboard-score {
+            font-weight: 700;
+            color: var(--secondary);
+        }
     </style>
     <script type="text/javascript" nonce="68b78f9716914a06b2db7fdc4d3"
         src="//injections.adguard.org?ts=1768222486918&amp;type=content-script&amp;dmn=ppl-ai-code-interpreter-files.s3.amazonaws.com&amp;url=https%3A%2F%2Fppl-ai-code-interpreter-files.s3.amazonaws.com%2Fweb%2Fdirect-files%2Fe9512fca4a5590daaea861c0acca31dc%2F86cdf302-22ef-4723-9688-b2dedcbac61d%2F24df75c2.html%3Fresponse-content-disposition%3Dattachment%253B%2520filename%253Dyoutube_game_hidden.html%253B%2520filename%252A%253DUTF-8%2527%2527youtube_game_hidden.html%26AWSAccessKeyId%3DASIA2F3EMEYE2ZLR3KJQ%26Signature%3DCxzs1%252Bo4L8A86JGAOj5F%252FxzqBe0%253D%26x-amz-security-token%3DIQoJb3JpZ2luX2VjECUaCXVzLWVhc3QtMSJIMEYCIQDC7ln9M5JAe3MP7k4grYoEU5M8Sg4v%252FH4telk6b%252BX%252FpgIhAIH0XmYiJRm%252BLJt6NZfiCeWUbDd4F%252BeL8hkLkrcFGwvnKvwECO7%252F%252F%252F%252F%252F%252F%252F%252F%252F%252FwEQARoMNjk5NzUzMzA5NzA1IgxjprVt1TM0444mzsUq0ARaBHWLvQViKnYrm4vWxadUMhYwKtf9rdXkQXRoBweM5bn9v2AAylr2yVbZi4RY0FlHFop860Z3JXI7T5X5xHfrLCKo4IKG8YmDoirZv9D4DpefI7AzYDRv9GVNXmnnXd0zE0GHmSeQvzVoisGmyNINw13x0jSNY0kb4ieSw94fsmLdUhwLyRWINkAow%252FOnVh6G0iKQRW2669P7v7Ib4V%252BJ%252F6%252BWUniWKrc%252BgNJAbdSEhpsiHxnHHSwkGbuZvQJVmYj2tcaxrI0Yf0fjRdKFMA2ePYuE5g0mD6SIeo5FqOl4xcFNOmxtjUFEXdGZNDg57r5Z6NRAD82pIiQvdraAZFR%252FwOoTAs51bxORln5t9JZWxYcibBEdOftzWZe%252F2LN2hv4qe8GFkDugFMgT160tjmm5mOOOrIjz%252F0KH5K%252FKEQf%252FqxWAfhVO6%252BRqEzMK45JD0Cpis7irck9vDaDJbZTh%252F8SGapP26guN9jix%252FAxzU5V1yhgvKfUGd%252FEiV7oSwpbaSB6QE7R%252FrVlnliSUhif9MRcJ0%252BlgPmgr%252FZUw24RFs6Z9iQkGuLPqfa7oJJdpWoKw5JAmpGu9%252Fb8menheKjEevGXBvREdevIj9Elmmm7vitbdJPDiFNEFG%252FeRERafpBIhKJ3z82g%252FKikHUBbQfppluyrv0WtfEKlyxs4qRdT4mbQrllhEnHGtBcGfmooi5PV%252Fw%252FTYs5Skbqv273xFxcDnqghfgttQeWwdXAB2KajtL%252FCWHuec031EBC6LJTCZGuEbZsgHYmbVS4WLHuj5%252F%252FaICxYyMPXdk8sGOpcBIW7Y%252FerfW7prjyokpYo4oVkb%252BOjDTQcSp1DAalEUUONyrqHj6I2ouvw7HkAYZhxeodnQIBeli9sGk0yFvNqOtNLjLtkxcJD8J7w7CXb2Vtpoh9uH9KsEV2DGOvpIHhUIe1Oc1oWIHfJv%252BGbOc%252B8e%252FvAUQ5ZaJvZ5%252Bz%252Bzmqw7uyRbIZJwrkGRMZEu%252BKlrLz2aAc9T0FnLoA%253D%253D%26Expires%3D1768224310&amp;app=comet.exe&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1&amp;stealth=1&amp;st-push&amp;st-loc&amp;st-dnt&amp;st-1pcttl=4320"></script>
     <script type="text/javascript" nonce="68b78f9716914a06b2db7fdc4d3"
         src="//injections.adguard.org?ts=1768222486918&amp;name=AdGuard%20Assistant&amp;name=AdGuard%20Extra&amp;name=AdGuard%20Popup%20Blocker&amp;name=Web%20of%20Trust&amp;type=user-script"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 
 <body>
@@ -872,6 +933,12 @@
         </div>
 
         <div class="content" id="gameContent">
+            <!-- Timer System -->
+            <div id="timerContainer" class="timer-container" style="display: none;">
+                <div id="timerBar" class="timer-bar"></div>
+                <div id="timerText" class="timer-text">30s</div>
+            </div>
+
             <div class="video-container" id="videoContainer">
                 <div class="video-wrapper">
                     <div class="video-hidden" id="videoHidden">
@@ -915,6 +982,7 @@
                             <input type="text" id="answerInput" placeholder="Enter the anime name..."
                                 autocomplete="off" disabled oninput="updateAutocomplete()">
                             <button type="submit" class="btn-primary" id="submitBtn" disabled>Submit</button>
+                            <button type="button" class="btn-secondary" id="skipBtn" onclick="skipGame()" disabled>Skip</button>
                             <div class="autocomplete-list" id="autocompleteList"></div>
                         </div>
                     </div>
@@ -924,6 +992,14 @@
             <button class="btn-success btn-full" id="nextGameBtn" onclick="startNewGame()" style="display:none;">
                 ▶️ Next Game
             </button>
+
+            <!-- Leaderboard Section -->
+            <div id="leaderboardSection" style="margin-top: 40px; text-align: center;">
+                <h3 style="margin-bottom: 15px;">🏆 High Scores</h3>
+                <div id="leaderboardList" style="max-width: 400px; margin: 0 auto;">
+                    <p style="color: #999;">No high scores yet. Start playing!</p>
+                </div>
+            </div>
 
             <div style="margin-top: 40px; text-align: center;">
                 <h3 style="margin-bottom: 15px;">Filter by Difficulty:</h3>
@@ -1102,7 +1178,9 @@
             gameOver: false,
             currentDifficulty: 'all',
             visibility: 50,
-            videoStarted: false
+            videoStarted: false,
+            timeLeft: 30,
+            timerInterval: null
         };
 
         let gameData = {
@@ -1116,6 +1194,7 @@
             createDefaultData();
             startNewGame();
             setupEventListeners();
+            updateLeaderboardUI();
         }
 
         function setupEventListeners() {
@@ -1156,9 +1235,11 @@
             document.getElementById('formSection').classList.remove('disabled');
             document.getElementById('answerInput').disabled = false;
             document.getElementById('submitBtn').disabled = false;
+            document.getElementById('skipBtn').disabled = false;
             document.getElementById('startVideoBtn').style.display = 'none';
 
             document.getElementById('answerInput').focus();
+            startTimer();
         }
 
 
@@ -1177,6 +1258,25 @@
 
         function saveGameData() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
+
+            // Handle High Scores
+            if (gameState.score > 0) {
+                const storedScores = localStorage.getItem('animeYoutubeHighScores');
+                let scores = storedScores ? JSON.parse(storedScores) : [];
+
+                scores.push({
+                    score: gameState.score,
+                    date: new Date().toISOString()
+                });
+
+                // Sort and keep top 5
+                scores.sort((a, b) => b.score - a.score);
+                scores = scores.slice(0, 5);
+
+                localStorage.setItem('animeYoutubeHighScores', JSON.stringify(scores));
+                updateLeaderboardUI();
+            }
+
             updateStats();
         }
 
@@ -1214,6 +1314,13 @@
             gameState.hintsRemaining = 3;
             gameState.hintsUsed = 0;
             gameState.videoStarted = false;
+            gameState.timeLeft = 30;
+            clearInterval(gameState.timerInterval);
+
+            // Reset Timer UI
+            document.getElementById('timerBar').style.width = '100%';
+            document.getElementById('timerText').textContent = '30s';
+            document.getElementById('timerContainer').style.display = 'none';
 
             const filteredItems = filterItems();
             if (filteredItems.length === 0) {
@@ -1319,17 +1426,19 @@
         }
 
         function submitAnswer(e) {
-            e.preventDefault();
+            if (e && e.preventDefault) e.preventDefault();
             if (gameState.gameOver || !gameState.videoStarted) return;
+
+            clearInterval(gameState.timerInterval);
 
             const input = document.getElementById('answerInput');
             const answer = input.value.trim().toLowerCase();
 
-            if (!answer) return;
-
+            // If it's a timeout (no answer), answer will be empty
             gameState.gameOver = true;
             input.disabled = true;
             document.getElementById('submitBtn').disabled = true;
+            document.getElementById('skipBtn').disabled = true;
 
             const correct = answer === gameState.currentItem.title.toLowerCase();
 
@@ -1338,14 +1447,27 @@
                 const basePoints = 100;
                 const difficultyBonus = gameState.currentItem.difficulty * 5;
                 const hintsBonus = (3 - gameState.hintsUsed) * 10;
-                const points = basePoints + difficultyBonus + hintsBonus;
+                const speedBonus = gameState.timeLeft * 2;
+                const points = basePoints + difficultyBonus + hintsBonus + speedBonus;
 
                 gameState.score += points;
+
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#6366f1', '#ec4899', '#10b981']
+                });
 
                 showResultModal(true, `Correct! It is "${gameState.currentItem.title}"`, points);
             } else {
                 gameState.wrong++;
-                showResultModal(false, `Wrong! It is "${gameState.currentItem.title}"`, 0);
+                const container = document.querySelector('.container');
+                container.classList.add('shake');
+                setTimeout(() => container.classList.remove('shake'), 500);
+
+                const msg = answer ? `Wrong! It is "${gameState.currentItem.title}"` : `Time's up! It was "${gameState.currentItem.title}"`;
+                showResultModal(false, msg, 0);
             }
 
             updateStats();
@@ -1393,6 +1515,68 @@
 
         function closeResultModal() {
             document.getElementById('resultModal').classList.remove('active');
+        }
+
+        // New Game Logic Features
+        function startTimer() {
+            clearInterval(gameState.timerInterval);
+            gameState.timeLeft = 30;
+            const timerBar = document.getElementById('timerBar');
+            const timerText = document.getElementById('timerText');
+            const timerContainer = document.getElementById('timerContainer');
+
+            timerContainer.style.display = 'block';
+            timerBar.style.width = '100%';
+            timerText.textContent = '30s';
+
+            gameState.timerInterval = setInterval(() => {
+                gameState.timeLeft--;
+                const percentage = (gameState.timeLeft / 30) * 100;
+                timerBar.style.width = percentage + '%';
+                timerText.textContent = gameState.timeLeft + 's';
+
+                if (gameState.timeLeft <= 0) {
+                    clearInterval(gameState.timerInterval);
+                    submitAnswer(new Event('submit'));
+                }
+            }, 1000);
+        }
+
+        function skipGame() {
+            if (gameState.gameOver || !gameState.videoStarted) return;
+
+            clearInterval(gameState.timerInterval);
+            gameState.gameOver = true;
+            gameState.wrong++;
+
+            document.getElementById('answerInput').disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('skipBtn').disabled = true;
+
+            showResultModal(false, `Skipped! It was "${gameState.currentItem.title}"`, 0);
+
+            updateStats();
+            saveGameData();
+            document.getElementById('nextGameBtn').style.display = 'block';
+        }
+
+        function updateLeaderboardUI() {
+            const leaderboardList = document.getElementById('leaderboardList');
+            const storedScores = localStorage.getItem('animeYoutubeHighScores');
+            let scores = storedScores ? JSON.parse(storedScores) : [];
+
+            if (scores.length === 0) {
+                leaderboardList.innerHTML = '<p style="color: #999;">No high scores yet. Start playing!</p>';
+                return;
+            }
+
+            leaderboardList.innerHTML = scores.map((score, index) => `
+                <div class="leaderboard-item">
+                    <span class="leaderboard-rank">#${index + 1}</span>
+                    <span>${new Date(score.date).toLocaleDateString()}</span>
+                    <span class="leaderboard-score">${score.score} Pkt</span>
+                </div>
+            `).join('');
         }
 
         function updateStats() {
