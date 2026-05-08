@@ -439,6 +439,47 @@
             display: flex;
             gap: 10px;
             position: relative;
+            align-items: center;
+        }
+
+        .timer-wrapper {
+            position: relative;
+            width: 46px;
+            height: 46px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+            display: none;
+        }
+
+        .timer-svg {
+            transform: rotate(-90deg);
+            width: 46px;
+            height: 46px;
+        }
+
+        .timer-circle-bg {
+            fill: none;
+            stroke: var(--border);
+            stroke-width: 4;
+        }
+
+        .timer-circle-progress {
+            fill: none;
+            stroke: var(--primary);
+            stroke-width: 4;
+            stroke-dasharray: 113;
+            stroke-dashoffset: 0;
+            transition: stroke-dashoffset 1s linear, stroke 0.3s ease;
+            stroke-linecap: round;
+        }
+
+        .timer-text-display {
+            position: absolute;
+            font-size: 0.85em;
+            font-weight: 700;
+            color: var(--dark);
         }
 
         input[type="text"],
@@ -1010,6 +1051,13 @@
                     <div class="form-group">
                         <label for="answerInput">Your Answer:</label>
                         <div class="input-group" style="position: relative;">
+                            <div class="timer-wrapper" id="timerWrapper">
+                                <svg class="timer-svg" viewBox="0 0 40 40">
+                                    <circle class="timer-circle-bg" cx="20" cy="20" r="18"></circle>
+                                    <circle class="timer-circle-progress" id="timerCircle" cx="20" cy="20" r="18"></circle>
+                                </svg>
+                                <span class="timer-text-display" id="timerTextDisplay">30</span>
+                            </div>
                             <input type="text" id="answerInput" placeholder="Enter the anime name..."
                                 autocomplete="off" disabled oninput="updateAutocomplete()">
                             <button type="submit" class="btn-primary" id="submitBtn" disabled>Submit</button>
@@ -1134,11 +1182,27 @@
                         </p>
                     </div>
 
+                    <div class="form-group" style="margin-top: 30px;">
+                        <label style="font-size: 1.1em; margin-bottom: 15px; display: block;">
+                            <strong>⏱️ Timer Duration:</strong>
+                        </label>
+                        <select id="timerSettingSelect" onchange="updateTimerSetting(this.value)">
+                            <option value="off">Off</option>
+                            <option value="30">30 Seconds</option>
+                            <option value="60">60 Seconds</option>
+                            <option value="90">90 Seconds</option>
+                        </select>
+                        <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                            Set the countdown time for each track or turn it off.
+                        </p>
+                    </div>
+
                     <div
                         style="margin-top: 30px; padding: 20px; background: #f0f7ff; border-radius: 8px; border-left: 4px solid var(--secondary);">
                         <h4 style="color: var(--secondary); margin-bottom: 10px;">ℹ️ Current Setting:</h4>
                         <p id="currentModeSummary" style="margin: 5px 0;"><strong>Mode:</strong> Audio Only</p>
                         <p id="currentBlurSummary" style="margin: 5px 0;"><strong>Blur:</strong> 15px (only applies in Video Mode)</p>
+                        <p id="currentTimerSummary" style="margin: 5px 0;"><strong>Timer:</strong> 30 Seconds</p>
                     </div>
 
                     <button class="btn-success btn-full" onclick="saveSettings()" style="margin-top: 20px;">
@@ -1218,7 +1282,8 @@
 
         let gameSettings = {
             mode: 'audio',  // 'audio' or 'video'
-            blurIntensity: 15  // 0-30px
+            blurIntensity: 15, // 0-30px
+            timerDuration: '30' // 'off', '30', '60', '90'
         };
 
         let gameState = {
@@ -1431,13 +1496,14 @@
             gameState.hintsRemaining = 3;
             gameState.hintsUsed = 0;
             gameState.videoStarted = false;
-            gameState.timeLeft = 30;
+            gameState.timeLeft = gameSettings.timerDuration === 'off' ? 9999 : parseInt(gameSettings.timerDuration || '30');
             clearInterval(gameState.timerInterval);
 
             // Reset Timer UI
-            document.getElementById('timerBar').style.width = '100%';
-            document.getElementById('timerText').textContent = '30s';
-            document.getElementById('timerContainer').style.display = 'none';
+            document.getElementById('timerWrapper').style.display = 'none';
+            document.getElementById('timerCircle').style.strokeDashoffset = '0';
+            document.getElementById('timerCircle').style.stroke = 'var(--primary)';
+            document.getElementById('timerTextDisplay').textContent = gameSettings.timerDuration || '30';
 
             const filteredItems = filterItems();
             if (filteredItems.length === 0) {
@@ -1563,7 +1629,7 @@
                 const basePoints = 100;
                 const difficultyBonus = (gameState.currentItem.difficulty || 5) * 5;
                 const hintsBonus = (3 - gameState.hintsUsed) * 10;
-                const speedBonus = gameState.timeLeft * 2;
+                const speedBonus = gameSettings.timerDuration === 'off' ? 0 : gameState.timeLeft * 2;
                 const points = basePoints + difficultyBonus + hintsBonus + speedBonus;
 
                 if (gameState.isMultiplayer) {
@@ -1662,20 +1728,40 @@
         // New Game Logic Features
         function startTimer() {
             clearInterval(gameState.timerInterval);
-            gameState.timeLeft = 30;
-            const timerBar = document.getElementById('timerBar');
-            const timerText = document.getElementById('timerText');
-            const timerContainer = document.getElementById('timerContainer');
+            const durationSetting = gameSettings.timerDuration || '30';
+            const timerWrapper = document.getElementById('timerWrapper');
 
-            timerContainer.style.display = 'block';
-            timerBar.style.width = '100%';
-            timerText.textContent = '30s';
+            if (durationSetting === 'off') {
+                timerWrapper.style.display = 'none';
+                // set a large dummy time so it doesn't trigger timeout
+                gameState.timeLeft = 9999;
+                return;
+            }
+
+            const duration = parseInt(durationSetting);
+            gameState.timeLeft = duration;
+
+            const timerCircle = document.getElementById('timerCircle');
+            const timerTextDisplay = document.getElementById('timerTextDisplay');
+
+            timerWrapper.style.display = 'flex';
+            timerCircle.style.strokeDashoffset = '0';
+            timerCircle.style.stroke = 'var(--primary)';
+            timerTextDisplay.textContent = duration;
 
             gameState.timerInterval = setInterval(() => {
                 gameState.timeLeft--;
-                const percentage = (gameState.timeLeft / 30) * 100;
-                timerBar.style.width = percentage + '%';
-                timerText.textContent = gameState.timeLeft + 's';
+
+                const percentage = gameState.timeLeft / duration;
+                const offset = 113 - (percentage * 113); // 113 is approx 2 * pi * 18
+                timerCircle.style.strokeDashoffset = offset;
+                timerTextDisplay.textContent = gameState.timeLeft;
+
+                if (percentage <= 0.2) {
+                    timerCircle.style.stroke = 'var(--danger)';
+                } else if (percentage <= 0.5) {
+                    timerCircle.style.stroke = 'var(--warning)';
+                }
 
                 if (gameState.timeLeft <= 0) {
                     clearInterval(gameState.timerInterval);
@@ -2047,7 +2133,18 @@
             document.getElementById('blurSlider').value = gameSettings.blurIntensity;
             document.getElementById('blurValue').textContent = gameSettings.blurIntensity + 'px';
 
+            // Update Timer Setting
+            const timerSelect = document.getElementById('timerSettingSelect');
+            if (timerSelect) {
+                timerSelect.value = gameSettings.timerDuration || '30';
+            }
+
             // Update Summary
+            updateSettingsSummary();
+        }
+
+        function updateTimerSetting(value) {
+            gameSettings.timerDuration = value;
             updateSettingsSummary();
         }
 
@@ -2079,6 +2176,13 @@
             const blurNote = gameSettings.mode === 'audio' ? ' (only applies in Video Mode)' : ' (active)';
             document.getElementById('currentBlurSummary').innerHTML =
                 `<strong>Blur:</strong> ${gameSettings.blurIntensity}px${blurNote}`;
+
+            const timerDuration = gameSettings.timerDuration || '30';
+            const timerDisplay = timerDuration === 'off' ? 'Off' : timerDuration + ' Seconds';
+            const timerSummaryEl = document.getElementById('currentTimerSummary');
+            if (timerSummaryEl) {
+                timerSummaryEl.innerHTML = `<strong>Timer:</strong> ${timerDisplay}`;
+            }
         }
 
         function updateStartButtonText() {
