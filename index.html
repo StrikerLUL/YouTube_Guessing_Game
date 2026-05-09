@@ -1286,6 +1286,97 @@
             timerDuration: '30' // 'off', '30', '60', '90'
         };
 
+        // Animation logic for score display
+        let currentDisplayedScore = 0;
+        let scoreAnimationId = null;
+
+        function animateScoreDisplay(targetScore) {
+            const displayEl = document.getElementById('scoreDisplay');
+            if (!displayEl) return;
+
+            // Start animation effect
+            displayEl.style.transform = 'scale(1.5)';
+            displayEl.style.color = '#10b981'; // Success green
+            displayEl.style.transition = 'all 0.1s ease-in-out';
+
+            if (scoreAnimationId) {
+                cancelAnimationFrame(scoreAnimationId);
+            }
+
+            const startScore = currentDisplayedScore;
+            if (targetScore < startScore) currentDisplayedScore = targetScore; // Fix multiplayer score jump
+            const diff = targetScore - startScore;
+            const duration = 1000; // ms
+            let startTime = null;
+
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const progress = timestamp - startTime;
+
+                const percentage = Math.min(progress / duration, 1);
+                // Ease out function
+                const easePercentage = 1 - Math.pow(1 - percentage, 3);
+
+                currentDisplayedScore = Math.floor(startScore + (diff * easePercentage));
+                displayEl.textContent = currentDisplayedScore;
+
+                if (percentage < 1) {
+                    scoreAnimationId = requestAnimationFrame(step);
+                } else {
+                    // Reset styling when done
+                    displayEl.style.transform = 'scale(1)';
+                    displayEl.style.color = 'var(--text)';
+                    currentDisplayedScore = targetScore;
+                    displayEl.textContent = currentDisplayedScore;
+                }
+            }
+
+            scoreAnimationId = requestAnimationFrame(step);
+        }
+        // Audio Synthesizer using Web Audio API
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                // Happy chime
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(523.25, now); // C5
+                oscillator.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                oscillator.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                oscillator.frequency.setValueAtTime(1046.50, now + 0.3); // C6
+
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(0.5, now + 0.05);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+
+                oscillator.start(now);
+                oscillator.stop(now + 0.6);
+            } else if (type === 'wrong') {
+                // Sad buzzer
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(150, now);
+                oscillator.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(0.3, now + 0.05);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+
+                oscillator.start(now);
+                oscillator.stop(now + 0.4);
+            }
+        }
         let gameState = {
             currentItem: null,
             score: 0,
@@ -1655,7 +1746,7 @@
                 const speedBonus = gameSettings.timerDuration === 'off' ? 0 : gameState.timeLeft * 2;
                 const points = basePoints + difficultyBonus + hintsBonus + speedBonus;
 
-                if (gameState.isMultiplayer) {
+                if (gameState.isMultiplayer && gameState.players && gameState.players.length > 0) {
                     const player = gameState.players[gameState.currentPlayerIndex];
                     player.score += points;
                     player.correct++;
@@ -1671,13 +1762,15 @@
                     colors: ['#6366f1', '#ec4899', '#10b981']
                 });
 
+                playSound('correct');
                 showResultModal(true, `Correct! It is "${gameState.currentItem.title}"`, points);
             } else {
-                if (gameState.isMultiplayer) {
+                if (gameState.isMultiplayer && gameState.players && gameState.players.length > 0) {
                     gameState.players[gameState.currentPlayerIndex].wrong++;
                 } else {
                     gameState.wrong++;
                 }
+                playSound('wrong');
                 showResultModal(false, `Wrong! It is "${gameState.currentItem.title}"`, 0);
             }
 
@@ -1804,6 +1897,7 @@
             document.getElementById('submitBtn').disabled = true;
             document.getElementById('skipBtn').disabled = true;
 
+            playSound('wrong');
             showResultModal(false, `Skipped! It was "${gameState.currentItem.title}"`, 0);
 
             updateStats();
@@ -1831,9 +1925,9 @@
         }
 
         function updateStats() {
-            if (gameState.isMultiplayer && gameState.players.length > 0) {
+            if (gameState.isMultiplayer && gameState.players && gameState.players.length > 0) {
                 const player = gameState.players[gameState.currentPlayerIndex];
-                document.getElementById('scoreDisplay').textContent = player.score;
+                animateScoreDisplay(player.score);
                 document.getElementById('correctCount').textContent = player.correct;
                 document.getElementById('wrongCount').textContent = player.wrong;
 
@@ -1844,7 +1938,7 @@
                 document.getElementById('currentPlayerIndicator').textContent =
                     `${player.name}'s Turn (Round ${gameState.currentRound}/${gameState.maxRounds})`;
             } else {
-                document.getElementById('scoreDisplay').textContent = gameState.score;
+                animateScoreDisplay(gameState.score);
                 document.getElementById('correctCount').textContent = gameState.correct;
                 document.getElementById('wrongCount').textContent = gameState.wrong;
 
