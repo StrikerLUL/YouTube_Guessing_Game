@@ -1511,11 +1511,22 @@
 
 
 
+        function preprocessGameData() {
+            if (gameData && gameData.items) {
+                gameData.items.forEach(item => {
+                    if (item.title) {
+                        item.titleLower = item.title.toLowerCase();
+                    }
+                });
+            }
+        }
+
         function loadGameData() {
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) {
                 try {
                     gameData = JSON.parse(stored);
+                    preprocessGameData();
                 } catch (e) {
                     console.error('Fehler beim Laden der Daten:', e);
                     gameData = { items: [], lastPlayed: [] };
@@ -1572,6 +1583,7 @@
                         hints: ['A magical notebook', 'A book that causes deaths', 'Psychological thriller']
                     }
                 ];
+                preprocessGameData();
                 saveGameData();
             }
         }
@@ -1683,7 +1695,7 @@
 
             // Filter items that contain the input text
             const filteredItems = gameData.items.filter(item =>
-                item.title.toLowerCase().includes(input)
+                (item.titleLower || item.title.toLowerCase()).includes(input)
             );
 
             console.log('Autocomplete: Input="' + input + '", Found ' + filteredItems.length + ' items');
@@ -1737,7 +1749,7 @@
             document.getElementById('submitBtn').disabled = true;
             document.getElementById('skipBtn').disabled = true;
 
-            const correct = answer === gameState.currentItem.title.toLowerCase();
+            const correct = answer === (gameState.currentItem.titleLower || gameState.currentItem.title.toLowerCase());
 
             if (correct) {
                 const basePoints = 100;
@@ -2032,6 +2044,7 @@
             const newItem = {
                 id: Date.now(),
                 title: title,
+                titleLower: title.toLowerCase(),
                 youtube: embedUrl,
                 difficulty: difficulty,
                 hints: [
@@ -2113,6 +2126,7 @@
                 const updatedDifficulty = parseInt(document.getElementById('difficultyInput').value);
 
                 item.title = updatedTitle;
+                item.titleLower = updatedTitle.toLowerCase();
                 item.difficulty = updatedDifficulty;
                 saveGameData();
 
@@ -2160,6 +2174,7 @@
                     const imported = JSON.parse(event.target.result);
                     if (imported.items && Array.isArray(imported.items)) {
                         gameData = imported;
+                        preprocessGameData();
                         saveGameData();
                         showMessage('Data imported!', 'success');
                         refreshManageTab();
