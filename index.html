@@ -1094,6 +1094,9 @@
             <button class="btn-success btn-full" id="nextGameBtn" onclick="startNewGame()" style="display:none;">
                 ▶️ Next Game
             </button>
+            <button class="btn-primary btn-full" id="saveScoreBtn" onclick="saveHighScore()" style="display:none; margin-top: 10px;">
+                💾 Save High Score
+            </button>
 
             <!-- Leaderboard Section -->
             <div id="leaderboardSection" style="margin-top: 40px; text-align: center;">
@@ -1559,13 +1562,19 @@
 
         function saveGameData() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
+            updateStats();
+        }
 
-            // Handle High Scores
-            if (gameState.score > 0) {
+        function saveHighScore() {
+            if (gameState.score <= 0) return;
+
+            const playerName = prompt('Enter your name for the high score:');
+            if (playerName && playerName.trim() !== '') {
                 const storedScores = localStorage.getItem('animeYoutubeHighScores');
                 let scores = storedScores ? JSON.parse(storedScores) : [];
 
                 scores.push({
+                    name: playerName.trim(),
                     score: gameState.score,
                     date: new Date().toISOString()
                 });
@@ -1576,9 +1585,10 @@
 
                 localStorage.setItem('animeYoutubeHighScores', JSON.stringify(scores));
                 updateLeaderboardUI();
-            }
 
-            updateStats();
+                document.getElementById('saveScoreBtn').style.display = 'none';
+                showMessage('High score saved successfully!', 'success');
+            }
         }
 
         function createDefaultData() {
@@ -1660,6 +1670,9 @@
             document.getElementById('answerInput').disabled = true;
             document.getElementById('submitBtn').disabled = true;
             document.getElementById('nextGameBtn').style.display = 'none';
+            if (document.getElementById('saveScoreBtn')) {
+                document.getElementById('saveScoreBtn').style.display = 'none';
+            }
             document.getElementById('autocompleteList').classList.remove('active');
 
             // Reset zu Bereit-Zustand
@@ -1818,6 +1831,9 @@
             updateStats();
             saveGameData();
             document.getElementById('nextGameBtn').style.display = 'block';
+            if (!gameState.isMultiplayer && gameState.score > 0) {
+                document.getElementById('saveScoreBtn').style.display = 'block';
+            }
         }
 
         function revealHint() {
@@ -1944,6 +1960,9 @@
             updateStats();
             saveGameData();
             document.getElementById('nextGameBtn').style.display = 'block';
+            if (!gameState.isMultiplayer && gameState.score > 0) {
+                document.getElementById('saveScoreBtn').style.display = 'block';
+            }
         }
 
         function updateLeaderboardUI() {
@@ -1956,13 +1975,15 @@
                 return;
             }
 
-            leaderboardList.innerHTML = scores.map((score, index) => `
-                <div class="leaderboard-item">
-                    <span class="leaderboard-rank">#${index + 1}</span>
-                    <span>${new Date(score.date).toLocaleDateString()}</span>
-                    <span class="leaderboard-score">${score.score} Pkt</span>
+            leaderboardList.innerHTML = scores.map((score, index) => {
+                const safeName = score.name ? score.name.replace(/[&<>"']/g, function(m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]; }) : 'Anonymous';
+                return `
+                <div class="leaderboard-item" style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border);">
+                    <span class="leaderboard-rank" style="font-weight: bold; color: var(--primary);">#${index + 1}</span>
+                    <span style="flex: 1; text-align: center;">👤 ${safeName} - ${new Date(score.date).toLocaleDateString()}</span>
+                    <span class="leaderboard-score" style="font-weight: bold;">${score.score} Pkt</span>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function updateStats() {
