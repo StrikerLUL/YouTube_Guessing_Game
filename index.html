@@ -1094,6 +1094,9 @@
             <button class="btn-success btn-full" id="nextGameBtn" onclick="startNewGame()" style="display:none;">
                 ▶️ Next Game
             </button>
+            <button class="btn-primary btn-full" id="saveScoreBtn" onclick="saveHighScore()" style="display:none; margin-top: 10px;">
+                💾 Save Highscore
+            </button>
 
             <!-- Leaderboard Section -->
             <div id="leaderboardSection" style="margin-top: 40px; text-align: center;">
@@ -1559,25 +1562,6 @@
 
         function saveGameData() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
-
-            // Handle High Scores
-            if (gameState.score > 0) {
-                const storedScores = localStorage.getItem('animeYoutubeHighScores');
-                let scores = storedScores ? JSON.parse(storedScores) : [];
-
-                scores.push({
-                    score: gameState.score,
-                    date: new Date().toISOString()
-                });
-
-                // Sort and keep top 5
-                scores.sort((a, b) => b.score - a.score);
-                scores = scores.slice(0, 5);
-
-                localStorage.setItem('animeYoutubeHighScores', JSON.stringify(scores));
-                updateLeaderboardUI();
-            }
-
             updateStats();
         }
 
@@ -1660,6 +1644,7 @@
             document.getElementById('answerInput').disabled = true;
             document.getElementById('submitBtn').disabled = true;
             document.getElementById('nextGameBtn').style.display = 'none';
+            document.getElementById('saveScoreBtn').style.display = 'none';
             document.getElementById('autocompleteList').classList.remove('active');
 
             // Reset zu Bereit-Zustand
@@ -1818,6 +1803,9 @@
             updateStats();
             saveGameData();
             document.getElementById('nextGameBtn').style.display = 'block';
+            if (!gameState.isMultiplayer && gameState.score > 0) {
+                document.getElementById('saveScoreBtn').style.display = 'block';
+            }
         }
 
         function revealHint() {
@@ -1944,6 +1932,50 @@
             updateStats();
             saveGameData();
             document.getElementById('nextGameBtn').style.display = 'block';
+            if (!gameState.isMultiplayer && gameState.score > 0) {
+                document.getElementById('saveScoreBtn').style.display = 'block';
+            }
+        }
+
+        function saveHighScore() {
+            if (gameState.score <= 0) {
+                showMessage('You need at least 1 point to save a high score!', 'warning');
+                return;
+            }
+            let playerName = prompt('Enter your name for the highscore:');
+            if (!playerName || playerName.trim() === '') return;
+
+            playerName = playerName.replace(/[&<>"']/g, function(m) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[m];
+            });
+
+            const storedScores = localStorage.getItem('animeYoutubeHighScores');
+            let scores = storedScores ? JSON.parse(storedScores) : [];
+
+            scores.push({
+                name: playerName,
+                score: gameState.score,
+                date: new Date().toISOString()
+            });
+
+            scores.sort((a, b) => b.score - a.score);
+            scores = scores.slice(0, 5);
+
+            localStorage.setItem('animeYoutubeHighScores', JSON.stringify(scores));
+            updateLeaderboardUI();
+
+            gameState.score = 0;
+            gameState.correct = 0;
+            gameState.wrong = 0;
+            updateStats();
+            document.getElementById('saveScoreBtn').style.display = 'none';
+            showMessage('Highscore saved!', 'success');
         }
 
         function updateLeaderboardUI() {
@@ -1959,7 +1991,7 @@
             leaderboardList.innerHTML = scores.map((score, index) => `
                 <div class="leaderboard-item">
                     <span class="leaderboard-rank">#${index + 1}</span>
-                    <span>${new Date(score.date).toLocaleDateString()}</span>
+                    <span><strong>${score.name || 'Anonymous'}</strong> - ${new Date(score.date).toLocaleDateString()}</span>
                     <span class="leaderboard-score">${score.score} Pkt</span>
                 </div>
             `).join('');
