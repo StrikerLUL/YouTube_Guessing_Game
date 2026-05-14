@@ -1451,7 +1451,7 @@
         }
 
         function setupEventListeners() {
-            document.getElementById('addContentForm').addEventListener('submit', addContent);
+            document.getElementById('addContentForm').onsubmit = addContent;
         }
 
         function startMultiplayerGame() {
@@ -2184,10 +2184,23 @@
             document.getElementById('addContentForm').onsubmit = (e) => {
                 e.preventDefault();
                 const updatedTitle = document.getElementById('titleInput').value.trim();
+                const updatedYoutube = document.getElementById('youtubeInput').value.trim();
                 const updatedDifficulty = parseInt(document.getElementById('difficultyInput').value);
+
+                if (!updatedTitle || !updatedYoutube || !updatedDifficulty) {
+                    showMessage('Please fill in all fields!', 'error');
+                    return;
+                }
+
+                const embedUrl = convertToYoutubeEmbed(updatedYoutube);
+                if (!embedUrl) {
+                    showMessage('Invalid YouTube link! Example: https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'error');
+                    return;
+                }
 
                 item.title = updatedTitle;
                 item.titleLower = updatedTitle.toLowerCase();
+                item.youtube = embedUrl;
                 item.difficulty = updatedDifficulty;
                 saveGameData();
 
