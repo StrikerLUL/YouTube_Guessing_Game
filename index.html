@@ -954,6 +954,41 @@
             font-size: 1.5em;
             margin-right: 10px;
         }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: #f9f9f9;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .leaderboard-rank {
+            font-weight: bold;
+            color: var(--primary);
+            width: 30px;
+        }
+
+        .leaderboard-name {
+            font-weight: bold;
+            flex-grow: 1;
+            text-align: left;
+            margin-left: 10px;
+        }
+
+        .leaderboard-date {
+            font-size: 0.85em;
+            color: #666;
+            margin-right: 15px;
+        }
+
+        .leaderboard-score {
+            font-weight: bold;
+            color: var(--success);
+        }
     </style>
 </head>
 
@@ -1093,6 +1128,9 @@
 
             <button class="btn-success btn-full" id="nextGameBtn" onclick="startNewGame()" style="display:none;">
                 ▶️ Next Game
+            </button>
+            <button class="btn-primary btn-full" id="saveScoreBtn" onclick="saveHighScore()" style="display:none; margin-top: 10px;">
+                💾 Save Highscore
             </button>
 
             <!-- Leaderboard Section -->
@@ -1559,25 +1597,6 @@
 
         function saveGameData() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
-
-            // Handle High Scores
-            if (gameState.score > 0) {
-                const storedScores = localStorage.getItem('animeYoutubeHighScores');
-                let scores = storedScores ? JSON.parse(storedScores) : [];
-
-                scores.push({
-                    score: gameState.score,
-                    date: new Date().toISOString()
-                });
-
-                // Sort and keep top 5
-                scores.sort((a, b) => b.score - a.score);
-                scores = scores.slice(0, 5);
-
-                localStorage.setItem('animeYoutubeHighScores', JSON.stringify(scores));
-                updateLeaderboardUI();
-            }
-
             updateStats();
         }
 
@@ -1660,6 +1679,7 @@
             document.getElementById('answerInput').disabled = true;
             document.getElementById('submitBtn').disabled = true;
             document.getElementById('nextGameBtn').style.display = 'none';
+            document.getElementById('saveScoreBtn').style.display = 'none';
             document.getElementById('autocompleteList').classList.remove('active');
 
             // Reset zu Bereit-Zustand
@@ -1818,6 +1838,9 @@
             updateStats();
             saveGameData();
             document.getElementById('nextGameBtn').style.display = 'block';
+            if (!gameState.isMultiplayer && gameState.score > 0) {
+                document.getElementById('saveScoreBtn').style.display = 'block';
+            }
         }
 
         function revealHint() {
@@ -1944,6 +1967,36 @@
             updateStats();
             saveGameData();
             document.getElementById('nextGameBtn').style.display = 'block';
+            if (!gameState.isMultiplayer && gameState.score > 0) {
+                document.getElementById('saveScoreBtn').style.display = 'block';
+            }
+        }
+
+        function saveHighScore() {
+            const playerName = prompt('Enter your name for the highscore:');
+            if (!playerName || playerName.trim() === '') return;
+
+            const sanitizedName = playerName.replace(/[&<>"']/g, function(m) {
+                return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m];
+            });
+
+            const storedScores = localStorage.getItem('animeYoutubeHighScores');
+            let scores = storedScores ? JSON.parse(storedScores) : [];
+
+            scores.push({
+                name: sanitizedName,
+                score: gameState.score,
+                date: new Date().toISOString()
+            });
+
+            scores.sort((a, b) => b.score - a.score);
+            scores = scores.slice(0, 5);
+
+            localStorage.setItem('animeYoutubeHighScores', JSON.stringify(scores));
+            updateLeaderboardUI();
+
+            document.getElementById('saveScoreBtn').style.display = 'none';
+            showMessage('Highscore saved successfully!', 'success');
         }
 
         function updateLeaderboardUI() {
@@ -1959,7 +2012,8 @@
             leaderboardList.innerHTML = scores.map((score, index) => `
                 <div class="leaderboard-item">
                     <span class="leaderboard-rank">#${index + 1}</span>
-                    <span>${new Date(score.date).toLocaleDateString()}</span>
+                    <span class="leaderboard-name">${score.name || 'Anonymous'}</span>
+                    <span class="leaderboard-date">${new Date(score.date).toLocaleDateString()}</span>
                     <span class="leaderboard-score">${score.score} Pkt</span>
                 </div>
             `).join('');
