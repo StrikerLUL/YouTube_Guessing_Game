@@ -1636,6 +1636,11 @@
                 if (allBtn) allBtn.classList.add('selected');
 
                 filteredItems = filterItems();
+
+                if (filteredItems.length === 0) {
+                    showMessage('Error: No valid entries found. Please check your data.', 'error');
+                    return;
+                }
             }
 
             gameState.currentItem = filteredItems[Math.floor(Math.random() * filteredItems.length)];
@@ -1668,7 +1673,13 @@
         }
 
         function filterItems() {
-            let filtered = gameData.items;
+            let filtered = gameData.items.filter(item =>
+                item &&
+                typeof item.title === 'string' &&
+                item.title.trim() !== '' &&
+                typeof item.youtube === 'string' &&
+                item.youtube.trim() !== ''
+            );
 
             if (gameState.currentDifficulty !== 'all') {
                 filtered = filtered.filter(item => {
@@ -1703,7 +1714,7 @@
 
             // Filter items that contain the input text
             const filteredItems = gameData.items.filter(item =>
-                (item.titleLower || item.title.toLowerCase()).includes(input)
+                item && typeof item.title === 'string' && (item.titleLower || item.title.toLowerCase()).includes(input)
             );
 
             console.log('Autocomplete: Input="' + input + '", Found ' + filteredItems.length + ' items');
