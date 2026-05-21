@@ -1540,7 +1540,7 @@
         function preprocessGameData() {
             if (gameData && gameData.items) {
                 gameData.items.forEach(item => {
-                    if (item.title) {
+                    if (item && typeof item.title === 'string') {
                         item.titleLower = item.title.toLowerCase();
                     }
                 });
@@ -1624,18 +1624,25 @@
 
             let filteredItems = filterItems();
             if (filteredItems.length === 0) {
-                showMessage('No entries available for this difficulty! Loading defaults...', 'warning');
-                createDefaultData();
-                gameState.currentDifficulty = 'all';
+                if (gameState.currentDifficulty !== 'all') {
+                    showMessage('No entries available for this difficulty! Falling back to all difficulties.', 'warning');
+                    gameState.currentDifficulty = 'all';
 
-                // Update UI button selection
-                document.querySelectorAll('.difficulty-btn').forEach(btn => {
-                    btn.classList.remove('selected');
-                });
-                const allBtn = document.querySelector('.difficulty-btn.all-difficulties');
-                if (allBtn) allBtn.classList.add('selected');
+                    // Update UI button selection
+                    document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                        btn.classList.remove('selected');
+                    });
+                    const allBtn = document.querySelector('.difficulty-btn.all-difficulties');
+                    if (allBtn) allBtn.classList.add('selected');
 
-                filteredItems = filterItems();
+                    filteredItems = filterItems();
+                }
+
+                if (filteredItems.length === 0) {
+                    showMessage('No valid game items found! Resetting to default data...', 'error');
+                    createDefaultData();
+                    filteredItems = filterItems();
+                }
             }
 
             gameState.currentItem = filteredItems[Math.floor(Math.random() * filteredItems.length)];
@@ -1668,7 +1675,11 @@
         }
 
         function filterItems() {
-            let filtered = gameData.items;
+            let filtered = gameData.items.filter(item =>
+                item &&
+                typeof item.title === 'string' && item.title.trim() !== '' &&
+                typeof item.youtube === 'string' && item.youtube.trim() !== ''
+            );
 
             if (gameState.currentDifficulty !== 'all') {
                 filtered = filtered.filter(item => {
@@ -1702,9 +1713,11 @@
             }
 
             // Filter items that contain the input text
-            const filteredItems = gameData.items.filter(item =>
-                (item.titleLower || item.title.toLowerCase()).includes(input)
-            );
+            const filteredItems = gameData.items.filter(item => {
+                if (!item || typeof item.title !== 'string') return false;
+                const titleToSearch = item.titleLower || item.title.toLowerCase();
+                return titleToSearch.includes(input);
+            });
 
             console.log('Autocomplete: Input="' + input + '", Found ' + filteredItems.length + ' items');
 
@@ -1757,7 +1770,11 @@
             document.getElementById('submitBtn').disabled = true;
             document.getElementById('skipBtn').disabled = true;
 
-            const correct = answer === (gameState.currentItem.titleLower || gameState.currentItem.title.toLowerCase());
+            let correct = false;
+            if (gameState.currentItem && typeof gameState.currentItem.title === 'string') {
+                const targetTitle = gameState.currentItem.titleLower || gameState.currentItem.title.toLowerCase();
+                correct = (answer === targetTitle);
+            }
 
             if (correct) {
                 const basePoints = 100;
