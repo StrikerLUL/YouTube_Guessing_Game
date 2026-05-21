@@ -1841,9 +1841,34 @@
             title.textContent = isCorrect ? '✅ Correct!' : '❌ Wrong!';
             title.className = 'modal-header ' + (isCorrect ? 'result-correct' : 'result-incorrect');
             msgDiv.textContent = message;
-            pointsDiv.textContent = `${isCorrect ? '+' : ''}${points} Points`;
+            pointsDiv.textContent = `${isCorrect ? '+' : ''}0 Points`;
 
             modal.classList.add('active');
+
+            if (isCorrect && points > 0) {
+                const duration = 1000;
+                let startTimestamp = null;
+                const startPoints = 0;
+
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    // Ease out
+                    const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+                    const currentPoints = Math.floor(easeProgress * points);
+                    pointsDiv.textContent = `+${currentPoints} Points`;
+
+                    if (progress < 1) {
+                        requestAnimationFrame(step);
+                    } else {
+                        pointsDiv.textContent = `+${points} Points`;
+                    }
+                };
+                requestAnimationFrame(step);
+            } else if (!isCorrect) {
+                pointsDiv.textContent = '0 Points';
+            }
         }
 
         function showScoreboard() {
