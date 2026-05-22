@@ -1736,6 +1736,63 @@
             document.getElementById('answerInput').focus();
         }
 
+        function calculateScore() {
+            const basePoints = 100;
+            const difficultyBonus = (gameState.currentItem.difficulty || 5) * 5;
+            const hintsBonus = (3 - gameState.hintsUsed) * 10;
+            const speedBonus = gameSettings.timerDuration === 'off' ? 0 : gameState.timeLeft * 2;
+            return basePoints + difficultyBonus + hintsBonus + speedBonus;
+        }
+
+        function updateScore(points, isCorrect) {
+            if (gameState.isMultiplayer && gameState.players && gameState.players.length > 0) {
+                const player = gameState.players[gameState.currentPlayerIndex];
+                if (isCorrect) {
+                    player.score += points;
+                    player.correct++;
+                } else {
+                    player.wrong++;
+                }
+            } else {
+                if (isCorrect) {
+                    gameState.correct++;
+                    gameState.score += points;
+                } else {
+                    gameState.wrong++;
+                }
+            }
+        }
+
+        function handleAnswerUI(isCorrect, points) {
+            if (isCorrect) {
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#6366f1', '#ec4899', '#10b981']
+                });
+
+                playSound('correct');
+                showResultModal(true, `Correct! It is "${gameState.currentItem.title}"`, points);
+            } else {
+                playSound('wrong');
+                showResultModal(false, `Wrong! It is "${gameState.currentItem.title}"`, 0);
+
+                const container = document.querySelector('.container');
+                if (container) {
+                    container.classList.add('shake');
+                    setTimeout(() => container.classList.remove('shake'), 500);
+                }
+            }
+
+            updateStats();
+            saveGameData();
+            document.getElementById('nextGameBtn').style.display = 'block';
+            if (!gameState.isMultiplayer && gameState.score > 0) {
+                document.getElementById('saveScoreBtn').style.display = 'block';
+            }
+        }
+
         function submitAnswer(e) {
             if (e && e.preventDefault) e.preventDefault();
             if (gameState.gameOver || !gameState.videoStarted) return;
@@ -1758,54 +1815,10 @@
             document.getElementById('skipBtn').disabled = true;
 
             const correct = answer === (gameState.currentItem.titleLower || gameState.currentItem.title.toLowerCase());
+            const points = correct ? calculateScore() : 0;
 
-            if (correct) {
-                const basePoints = 100;
-                const difficultyBonus = (gameState.currentItem.difficulty || 5) * 5;
-                const hintsBonus = (3 - gameState.hintsUsed) * 10;
-                const speedBonus = gameSettings.timerDuration === 'off' ? 0 : gameState.timeLeft * 2;
-                const points = basePoints + difficultyBonus + hintsBonus + speedBonus;
-
-                if (gameState.isMultiplayer && gameState.players && gameState.players.length > 0) {
-                    const player = gameState.players[gameState.currentPlayerIndex];
-                    player.score += points;
-                    player.correct++;
-                } else {
-                    gameState.correct++;
-                    gameState.score += points;
-                }
-
-                confetti({
-                    particleCount: 150,
-                    spread: 70,
-                    origin: { y: 0.6 },
-                    colors: ['#6366f1', '#ec4899', '#10b981']
-                });
-
-                playSound('correct');
-                showResultModal(true, `Correct! It is "${gameState.currentItem.title}"`, points);
-            } else {
-                if (gameState.isMultiplayer && gameState.players && gameState.players.length > 0) {
-                    gameState.players[gameState.currentPlayerIndex].wrong++;
-                } else {
-                    gameState.wrong++;
-                }
-                playSound('wrong');
-                showResultModal(false, `Wrong! It is "${gameState.currentItem.title}"`, 0);
-
-                const container = document.querySelector('.container');
-                if (container) {
-                    container.classList.add('shake');
-                    setTimeout(() => container.classList.remove('shake'), 500);
-                }
-            }
-
-            updateStats();
-            saveGameData();
-            document.getElementById('nextGameBtn').style.display = 'block';
-            if (!gameState.isMultiplayer && gameState.score > 0) {
-                document.getElementById('saveScoreBtn').style.display = 'block';
-            }
+            updateScore(points, correct);
+            handleAnswerUI(correct, points);
         }
 
         function revealHint() {
