@@ -1440,6 +1440,7 @@
             items: [],
             lastPlayed: []
         };
+        let cachedStorageSize = '0.00';
 
         function init() {
             loadGameData();
@@ -1566,6 +1567,7 @@
             if (stored) {
                 try {
                     gameData = JSON.parse(stored);
+                    cachedStorageSize = (stored.length / 1024).toFixed(2);
                     preprocessGameData();
                 } catch (e) {
                     console.error('Fehler beim Laden der Daten:', e);
@@ -1575,7 +1577,9 @@
         }
 
         function saveGameData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
+            const dataStr = JSON.stringify(gameData);
+            localStorage.setItem(STORAGE_KEY, dataStr);
+            cachedStorageSize = (dataStr.length / 1024).toFixed(2);
             updateStats();
         }
 
@@ -2040,7 +2044,7 @@
             }
 
             const itemsCount = gameData.items.length;
-            const storageSize = (JSON.stringify(gameData).length / 1024).toFixed(2);
+            const storageSize = cachedStorageSize;
             document.getElementById('statsCount').textContent = itemsCount;
             document.getElementById('statsSize').textContent = storageSize + ' KB';
         }
