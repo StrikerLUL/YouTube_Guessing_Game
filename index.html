@@ -1306,6 +1306,20 @@
         const STORAGE_KEY = 'animeYoutubeGameData';
         const SETTINGS_KEY = 'animeYoutubeGameSettings';
 
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.toString().replace(/[&<>"']/g, function(m) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[m];
+            });
+        }
+
         let gameSettings = {
             mode: 'audio',  // 'audio' or 'video'
             blurIntensity: 15, // 0-30px
@@ -1856,7 +1870,7 @@
                 const crown = index === 0 ? '<span class="winner-crown">👑</span>' : '';
                 tr.innerHTML = `
                     <td>${index + 1}</td>
-                    <td>${crown}${player.name}</td>
+                    <td>${crown}${escapeHTML(player.name)}</td>
                     <td>${player.score}</td>
                     <td>${player.correct}</td>
                 `;
@@ -1945,15 +1959,7 @@
             let playerName = prompt('Enter your name for the highscore:');
             if (!playerName || playerName.trim() === '') return;
 
-            playerName = playerName.replace(/[&<>"']/g, function(m) {
-                return {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#39;'
-                }[m];
-            });
+            playerName = escapeHTML(playerName);
 
             const storedScores = localStorage.getItem('animeYoutubeHighScores');
             let scores = storedScores ? JSON.parse(storedScores) : [];
@@ -2150,7 +2156,7 @@
             list.innerHTML = gameData.items.map(item => `
                 <div class="item-card">
                     <div class="item-info">
-                        <div class="item-title">${item.title}</div>
+                        <div class="item-title">${escapeHTML(item.title)}</div>
                         <div class="item-meta">
                             Difficulty: ${'⭐'.repeat(Math.min(item.difficulty, 3))} (${item.difficulty}/10)
                         </div>
