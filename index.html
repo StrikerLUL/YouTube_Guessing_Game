@@ -1583,8 +1583,8 @@
             updateStats();
         }
 
-        function createDefaultData() {
-            if (gameData.items.length === 0) {
+        function createDefaultData(force = false) {
+            if (force || gameData.items.length === 0) {
                 gameData.items = [
                     {
                         id: 1,
@@ -1647,19 +1647,24 @@
 
         function selectNewItem() {
             let filteredItems = filterItems();
+
             if (filteredItems.length === 0) {
-                showMessage('No entries available for this difficulty! Loading defaults...', 'warning');
-                createDefaultData();
-                gameState.currentDifficulty = 'all';
+                if (gameState.currentDifficulty !== 'all') {
+                    showMessage('No entries available for this difficulty! Falling back to all difficulties...', 'warning');
+                    gameState.currentDifficulty = 'all';
 
-                // Update UI button selection
-                document.querySelectorAll('.difficulty-btn').forEach(btn => {
-                    btn.classList.remove('selected');
-                });
-                const allBtn = document.querySelector('.difficulty-btn.all-difficulties');
-                if (allBtn) allBtn.classList.add('selected');
+                    document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('selected'));
+                    const allBtn = document.querySelector('.difficulty-btn.all-difficulties');
+                    if (allBtn) allBtn.classList.add('selected');
 
-                filteredItems = filterItems();
+                    filteredItems = filterItems();
+                }
+
+                if (filteredItems.length === 0) {
+                    showMessage('No valid entries found! Loading defaults...', 'warning');
+                    createDefaultData(true);
+                    filteredItems = filterItems();
+                }
             }
 
             gameState.currentItem = filteredItems[Math.floor(Math.random() * filteredItems.length)];
@@ -1705,7 +1710,14 @@
         }
 
         function filterItems() {
-            let filtered = gameData.items;
+            // Aggressively filter out invalid/corrupted localStorage data
+            let filtered = gameData.items.filter(item =>
+                item &&
+                typeof item.title === 'string' &&
+                item.title.trim() !== '' &&
+                typeof item.youtube === 'string' &&
+                item.youtube.trim() !== ''
+            );
 
             if (gameState.currentDifficulty !== 'all') {
                 filtered = filtered.filter(item => {
@@ -1738,10 +1750,11 @@
                 return;
             }
 
-            // Filter items that contain the input text
-            const filteredItems = gameData.items.filter(item =>
-                (item.titleLower || item.title.toLowerCase()).includes(input)
-            );
+            // Filter out invalid items and find those that contain the input text
+            const filteredItems = gameData.items.filter(item => {
+                if (!item || typeof item.title !== 'string' || item.title.trim() === '') return false;
+                return (item.titleLower || item.title.toLowerCase()).includes(input);
+            });
 
             if (filteredItems.length === 0) {
                 autocompleteList.classList.remove('active');
