@@ -1706,8 +1706,6 @@
                 (item.titleLower || item.title.toLowerCase()).includes(input)
             );
 
-            console.log('Autocomplete: Input="' + input + '", Found ' + filteredItems.length + ' items');
-
             if (filteredItems.length === 0) {
                 autocompleteList.classList.remove('active');
                 return;
@@ -1727,7 +1725,6 @@
             });
 
             autocompleteList.classList.add('active');
-            console.log('Autocomplete: Showing ' + displayItems.length + ' suggestions');
         }
 
         function selectAutocomplete(title) {
