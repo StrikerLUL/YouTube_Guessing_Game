@@ -1832,6 +1832,8 @@
             document.getElementById('revealHintBtn').disabled = gameState.hintsRemaining <= 0;
         }
 
+        let resultScoreAnimationId = null;
+
         function showResultModal(isCorrect, message, points) {
             const modal = document.getElementById('resultModal');
             const title = document.getElementById('resultTitle');
@@ -1841,7 +1843,35 @@
             title.textContent = isCorrect ? '✅ Correct!' : '❌ Wrong!';
             title.className = 'modal-header ' + (isCorrect ? 'result-correct' : 'result-incorrect');
             msgDiv.textContent = message;
-            pointsDiv.textContent = `${isCorrect ? '+' : ''}${points} Points`;
+
+            if (resultScoreAnimationId) {
+                cancelAnimationFrame(resultScoreAnimationId);
+            }
+
+            if (points > 0) {
+                pointsDiv.textContent = `${isCorrect ? '+' : ''}0 Points`;
+                const duration = 1000;
+                let startTime = null;
+
+                function step(timestamp) {
+                    if (!startTime) startTime = timestamp;
+                    const progress = timestamp - startTime;
+                    const percentage = Math.min(progress / duration, 1);
+                    const easePercentage = 1 - Math.pow(1 - percentage, 3);
+                    const currentVal = Math.floor(points * easePercentage);
+
+                    pointsDiv.textContent = `${isCorrect ? '+' : ''}${currentVal} Points`;
+
+                    if (percentage < 1) {
+                        resultScoreAnimationId = requestAnimationFrame(step);
+                    } else {
+                        pointsDiv.textContent = `${isCorrect ? '+' : ''}${points} Points`;
+                    }
+                }
+                resultScoreAnimationId = requestAnimationFrame(step);
+            } else {
+                pointsDiv.textContent = `${isCorrect ? '+' : ''}${points} Points`;
+            }
 
             modal.classList.add('active');
         }
