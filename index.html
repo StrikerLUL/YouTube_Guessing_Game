@@ -1613,7 +1613,7 @@
             }
         }
 
-        function startNewGame() {
+        function handleMultiplayerRound() {
             if (gameState.isMultiplayer && gameState.gameOver) {
                 gameState.currentPlayerIndex++;
                 if (gameState.currentPlayerIndex >= gameState.players.length) {
@@ -1623,23 +1623,29 @@
 
                 if (gameState.currentRound > gameState.maxRounds) {
                     showScoreboard();
-                    return;
+                    return true;
                 }
             }
+            return false;
+        }
 
+        function resetGameState() {
             gameState.gameOver = false;
             gameState.hintsRemaining = 3;
             gameState.hintsUsed = 0;
             gameState.videoStarted = false;
             gameState.timeLeft = gameSettings.timerDuration === 'off' ? 9999 : parseInt(gameSettings.timerDuration || '30');
             clearInterval(gameState.timerInterval);
+        }
 
-            // Reset Timer UI
+        function resetTimerUI() {
             document.getElementById('timerWrapper').style.display = 'none';
             document.getElementById('timerCircle').style.strokeDashoffset = '0';
             document.getElementById('timerCircle').style.stroke = 'var(--primary)';
             document.getElementById('timerTextDisplay').textContent = gameSettings.timerDuration || '30';
+        }
 
+        function selectNewItem() {
             let filteredItems = filterItems();
             if (filteredItems.length === 0) {
                 showMessage('No entries available for this difficulty! Loading defaults...', 'warning');
@@ -1657,7 +1663,9 @@
             }
 
             gameState.currentItem = filteredItems[Math.floor(Math.random() * filteredItems.length)];
+        }
 
+        function resetGameUI() {
             document.getElementById('answerInput').value = '';
             document.getElementById('answerInput').disabled = true;
             document.getElementById('submitBtn').disabled = true;
@@ -1677,6 +1685,17 @@
             document.getElementById('hintSection').classList.add('disabled');
             document.getElementById('formSection').classList.add('disabled');
             document.getElementById('startVideoBtn').style.display = 'block';
+        }
+
+        function startNewGame() {
+            if (handleMultiplayerRound()) {
+                return;
+            }
+
+            resetGameState();
+            resetTimerUI();
+            selectNewItem();
+            resetGameUI();
 
             // Update Button Text basierend auf Modus
             updateStartButtonText();
