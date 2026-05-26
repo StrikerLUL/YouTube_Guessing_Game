@@ -1104,6 +1104,9 @@
                 <div id="leaderboardList" style="max-width: 400px; margin: 0 auto;">
                     <p style="color: #999;">No high scores yet. Start playing!</p>
                 </div>
+                <button class="btn-danger btn-small" id="clearHighscoresBtn" onclick="clearHighscores()" style="display:none; margin-top: 15px;">
+                    🗑️ Clear Highscores
+                </button>
             </div>
 
             <div style="margin-top: 40px; text-align: center;">
@@ -2081,21 +2084,43 @@
 
         function updateLeaderboardUI() {
             const leaderboardList = document.getElementById('leaderboardList');
+            const clearBtn = document.getElementById('clearHighscoresBtn');
             const storedScores = localStorage.getItem('animeYoutubeHighScores');
             let scores = storedScores ? JSON.parse(storedScores) : [];
 
             if (scores.length === 0) {
                 leaderboardList.innerHTML = '<p style="color: #999;">No high scores yet. Start playing!</p>';
+                if (clearBtn) clearBtn.style.display = 'none';
                 return;
             }
 
-            leaderboardList.innerHTML = scores.map((score, index) => `
-                <div class="leaderboard-item">
-                    <span class="leaderboard-rank">#${index + 1}</span>
-                    <span><strong>${score.name || 'Anonymous'}</strong> - ${new Date(score.date).toLocaleDateString()}</span>
-                    <span class="leaderboard-score">${score.score} Pkt</span>
+            // Limit to Top 5
+            const displayScores = scores.slice(0, 5);
+
+            leaderboardList.innerHTML = displayScores.map((score, index) => {
+                let rankDisplay = '#' + (index + 1);
+                if (index === 0) rankDisplay = '🥇';
+                else if (index === 1) rankDisplay = '🥈';
+                else if (index === 2) rankDisplay = '🥉';
+
+                return `
+                <div class="leaderboard-item" style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border);">
+                    <span class="leaderboard-rank" style="font-weight: bold; width: 30px;">${rankDisplay}</span>
+                    <span style="flex-grow: 1; text-align: left; padding-left: 10px;"><strong>${escapeHTML(score.name || 'Anonymous')}</strong> - ${new Date(score.date).toLocaleDateString()}</span>
+                    <span class="leaderboard-score" style="font-weight: bold; color: var(--primary);">${score.score} Pkt</span>
                 </div>
-            `).join('');
+                `;
+            }).join('');
+
+            if (clearBtn) clearBtn.style.display = 'inline-block';
+        }
+
+        function clearHighscores() {
+            if (confirm('Are you sure you want to clear all high scores?')) {
+                localStorage.removeItem('animeYoutubeHighScores');
+                updateLeaderboardUI();
+                showMessage('Highscores cleared!', 'success');
+            }
         }
 
         function updateStats() {
