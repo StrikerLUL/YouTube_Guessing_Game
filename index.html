@@ -1104,6 +1104,9 @@
                 <div id="leaderboardList" style="max-width: 400px; margin: 0 auto;">
                     <p style="color: #999;">No high scores yet. Start playing!</p>
                 </div>
+                <button class="btn-danger" id="clearHighscoresBtn" onclick="clearHighscores()" style="margin-top: 15px; display: inline-block;">
+                    🗑️ Clear Highscores
+                </button>
             </div>
 
             <div style="margin-top: 40px; text-align: center;">
@@ -2079,6 +2082,13 @@
             showMessage('Highscore saved!', 'success');
         }
 
+        function clearHighscores() {
+            if (!confirm('Are you sure you want to clear all high scores?')) return;
+            localStorage.removeItem('animeYoutubeHighScores');
+            updateLeaderboardUI();
+            showMessage('Highscores cleared!', 'success');
+        }
+
         function updateLeaderboardUI() {
             const leaderboardList = document.getElementById('leaderboardList');
             const storedScores = localStorage.getItem('animeYoutubeHighScores');
@@ -2089,13 +2099,17 @@
                 return;
             }
 
-            leaderboardList.innerHTML = scores.map((score, index) => `
+            const emojis = ['🥇', '🥈', '🥉'];
+
+            leaderboardList.innerHTML = scores.slice(0, 5).map((score, index) => {
+                const rankDisplay = index < 3 ? emojis[index] : `#${index + 1}`;
+                return `
                 <div class="leaderboard-item">
-                    <span class="leaderboard-rank">#${index + 1}</span>
+                    <span class="leaderboard-rank">${rankDisplay}</span>
                     <span><strong>${score.name || 'Anonymous'}</strong> - ${new Date(score.date).toLocaleDateString()}</span>
                     <span class="leaderboard-score">${score.score} Pkt</span>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function updateStats() {
