@@ -954,6 +954,41 @@
             font-size: 1.5em;
             margin-right: 10px;
         }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: #f9f9f9;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .leaderboard-rank {
+            font-weight: bold;
+            color: var(--primary);
+            width: 30px;
+        }
+
+        .leaderboard-name {
+            font-weight: bold;
+            flex-grow: 1;
+            text-align: left;
+            margin-left: 10px;
+        }
+
+        .leaderboard-date {
+            font-size: 0.85em;
+            color: #666;
+            margin-right: 15px;
+        }
+
+        .leaderboard-score {
+            font-weight: bold;
+            color: var(--success);
+        }
     </style>
 </head>
 
@@ -1091,10 +1126,19 @@
                 </form>
             </div>
 
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-success btn-full" id="nextGameBtn" onclick="startNewGame()" style="display:none; flex: 1;">
+                    ▶️ Next Game
+                </button>
+                <button class="btn-primary btn-full" id="saveScoreBtn" onclick="promptSaveScore()" style="display:none; flex: 1; background: #8b5cf6;">
+                    💾 Save Score & End
+                </button>
+            </div>
             <button class="btn-success btn-full" id="nextGameBtn" onclick="startNewGame()" style="display:none;">
                 ▶️ Next Game
             </button>
             <button class="btn-primary btn-full" id="saveScoreBtn" onclick="saveHighScore()" style="display:none; margin-top: 10px;">
+                💾 Save High Score
                 💾 Save Highscore
             </button>
 
@@ -1558,7 +1602,7 @@
         function preprocessGameData() {
             if (gameData && gameData.items) {
                 gameData.items.forEach(item => {
-                    if (item.title) {
+                    if (item && typeof item.title === 'string') {
                         item.titleLower = item.title.toLowerCase();
                     }
                 });
@@ -1599,6 +1643,51 @@
         }
 
         function saveGameData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
+            updateStats();
+        }
+
+        function saveHighScore() {
+            if (gameState.score <= 0) return;
+
+            const playerName = prompt('Enter your name for the high score:');
+            if (playerName && playerName.trim() !== '') {
+        function promptSaveScore() {
+            if (gameState.score <= 0) {
+                showMessage('No score to save yet!', 'warning');
+                return;
+            }
+
+            const playerName = prompt('Enter your name for the Highscore:');
+            if (playerName) {
+                const storedScores = localStorage.getItem('animeYoutubeHighScores');
+                let scores = storedScores ? JSON.parse(storedScores) : [];
+
+                scores.push({
+                    name: playerName.trim(),
+                    name: playerName,
+                    score: gameState.score,
+                    date: new Date().toISOString()
+                });
+
+                // Sort and keep top 5
+                scores.sort((a, b) => b.score - a.score);
+                scores = scores.slice(0, 5);
+
+                localStorage.setItem('animeYoutubeHighScores', JSON.stringify(scores));
+                updateLeaderboardUI();
+
+                document.getElementById('saveScoreBtn').style.display = 'none';
+                showMessage('High score saved successfully!', 'success');
+            }
+                // Reset game stats for single player
+                gameState.score = 0;
+                gameState.correct = 0;
+                gameState.wrong = 0;
+                updateStats();
+                startNewGame();
+                showMessage('Highscore saved successfully!', 'success');
+            }
             const dataStr = JSON.stringify(gameData);
             localStorage.setItem(STORAGE_KEY, dataStr);
             cachedStorageSize = (dataStr.length / 1024).toFixed(2);
@@ -1672,6 +1761,22 @@
 
             if (filteredItems.length === 0) {
                 if (gameState.currentDifficulty !== 'all') {
+                    showMessage('No entries available for this difficulty! Falling back to all difficulties.', 'warning');
+                    gameState.currentDifficulty = 'all';
+
+                    // Update UI button selection
+                    document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                        btn.classList.remove('selected');
+                    });
+                    const allBtn = document.querySelector('.difficulty-btn.all-difficulties');
+                    if (allBtn) allBtn.classList.add('selected');
+
+                    filteredItems = filterItems();
+                }
+
+                if (filteredItems.length === 0) {
+                    showMessage('No valid game items found! Resetting to default data...', 'error');
+                    createDefaultData();
                     showMessage('No entries available for this difficulty! Falling back to all difficulties...', 'warning');
                     gameState.currentDifficulty = 'all';
 
@@ -1682,6 +1787,11 @@
                     filteredItems = filterItems();
                 }
 
+                filteredItems = filterItems();
+
+                if (filteredItems.length === 0) {
+                    showMessage('Error: No valid entries found. Please check your data.', 'error');
+                    return;
                 if (filteredItems.length === 0) {
                     showMessage('No valid entries found! Loading defaults...', 'warning');
                     createDefaultData(true);
@@ -1697,6 +1807,11 @@
             document.getElementById('answerInput').disabled = true;
             document.getElementById('submitBtn').disabled = true;
             document.getElementById('nextGameBtn').style.display = 'none';
+            if (document.getElementById('saveScoreBtn')) {
+                document.getElementById('saveScoreBtn').style.display = 'none';
+            }
+            const saveScoreBtn = document.getElementById('saveScoreBtn');
+            if (saveScoreBtn) saveScoreBtn.style.display = 'none';
             document.getElementById('saveScoreBtn').style.display = 'none';
             document.getElementById('autocompleteList').classList.remove('active');
 
@@ -1732,6 +1847,10 @@
         }
 
         function filterItems() {
+            let filtered = gameData.items.filter(item =>
+                item &&
+                typeof item.title === 'string' && item.title.trim() !== '' &&
+                typeof item.youtube === 'string' && item.youtube.trim() !== ''
             // Aggressively filter out invalid/corrupted localStorage data
             let filtered = gameData.items.filter(item =>
                 item &&
@@ -1772,6 +1891,17 @@
                 return;
             }
 
+            // Filter items that contain the input text
+            const filteredItems = gameData.items.filter(item => {
+                if (!item || typeof item.title !== 'string') return false;
+                const titleToSearch = item.titleLower || item.title.toLowerCase();
+                return titleToSearch.includes(input);
+            });
+            const filteredItems = gameData.items.filter(item =>
+                item && typeof item.title === 'string' && (item.titleLower || item.title.toLowerCase()).includes(input)
+            );
+
+            console.log('Autocomplete: Input="' + input + '", Found ' + filteredItems.length + ' items');
             // Filter out invalid items and find those that contain the input text
             const filteredItems = gameData.items.filter(item => {
                 if (!item || typeof item.title !== 'string' || item.title.trim() === '') return false;
@@ -1805,6 +1935,39 @@
             document.getElementById('answerInput').focus();
         }
 
+        function submitAnswer(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            if (gameState.gameOver || !gameState.videoStarted) return;
+
+            const input = document.getElementById('answerInput');
+            const answer = input.value.trim().toLowerCase();
+
+            // If the user submitted empty answer but timer is not out
+            if (answer === '' && gameState.timeLeft > 0) {
+                showMessage('Please enter an anime name before submitting!', 'warning');
+                return;
+            }
+
+            clearInterval(gameState.timerInterval);
+
+            // If it's a timeout (no answer), answer will be empty
+            gameState.gameOver = true;
+            input.disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('skipBtn').disabled = true;
+
+            let correct = false;
+            if (gameState.currentItem && typeof gameState.currentItem.title === 'string') {
+                const targetTitle = gameState.currentItem.titleLower || gameState.currentItem.title.toLowerCase();
+                correct = (answer === targetTitle);
+            }
+
+            if (correct) {
+                const basePoints = 100;
+                const difficultyBonus = (gameState.currentItem.difficulty || 5) * 5;
+                const hintsBonus = (3 - gameState.hintsUsed) * 10;
+                const speedBonus = gameSettings.timerDuration === 'off' ? 0 : gameState.timeLeft * 2;
+                const points = basePoints + difficultyBonus + hintsBonus + speedBonus;
         function calculateScore() {
             const basePoints = 100;
             const difficultyBonus = (gameState.currentItem.difficulty || 5) * 5;
@@ -1857,6 +2020,13 @@
             updateStats();
             saveGameData();
             document.getElementById('nextGameBtn').style.display = 'block';
+            if (!gameState.isMultiplayer && gameState.score > 0) {
+                document.getElementById('saveScoreBtn').style.display = 'block';
+            }
+            if (!gameState.isMultiplayer) {
+                const saveBtn = document.getElementById('saveScoreBtn');
+                if (saveBtn) saveBtn.style.display = 'block';
+            }
             if (!gameState.isMultiplayer && gameState.score > 0) {
                 document.getElementById('saveScoreBtn').style.display = 'block';
             }
@@ -1925,6 +2095,7 @@
             title.textContent = isCorrect ? '✅ Correct!' : '❌ Wrong!';
             title.className = 'modal-header ' + (isCorrect ? 'result-correct' : 'result-incorrect');
             msgDiv.textContent = message;
+            pointsDiv.textContent = `${isCorrect ? '+' : ''}0 Points`;
 
             if (resultScoreAnimationId) {
                 cancelAnimationFrame(resultScoreAnimationId);
@@ -1956,6 +2127,31 @@
             }
 
             modal.classList.add('active');
+
+            if (isCorrect && points > 0) {
+                const duration = 1000;
+                let startTimestamp = null;
+                const startPoints = 0;
+
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    // Ease out
+                    const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+                    const currentPoints = Math.floor(easeProgress * points);
+                    pointsDiv.textContent = `+${currentPoints} Points`;
+
+                    if (progress < 1) {
+                        requestAnimationFrame(step);
+                    } else {
+                        pointsDiv.textContent = `+${points} Points`;
+                    }
+                };
+                requestAnimationFrame(step);
+            } else if (!isCorrect) {
+                pointsDiv.textContent = '0 Points';
+            }
         }
 
         function showScoreboard() {
@@ -2050,6 +2246,22 @@
         }
 
         function saveHighScore() {
+            const playerName = prompt('Enter your name for the highscore:');
+            if (!playerName || playerName.trim() === '') return;
+
+            const sanitizedName = playerName.replace(/[&<>"']/g, function(m) {
+                return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m];
+            });
+            if (!gameState.isMultiplayer) {
+                const saveBtn = document.getElementById('saveScoreBtn');
+                if (saveBtn) saveBtn.style.display = 'block';
+            }
+            if (!gameState.isMultiplayer && gameState.score > 0) {
+                document.getElementById('saveScoreBtn').style.display = 'block';
+            }
+        }
+
+        function saveHighScore() {
             if (gameState.score <= 0) {
                 showMessage('You need at least 1 point to save a high score!', 'warning');
                 return;
@@ -2063,6 +2275,7 @@
             let scores = storedScores ? JSON.parse(storedScores) : [];
 
             scores.push({
+                name: sanitizedName,
                 name: playerName,
                 score: gameState.score,
                 date: new Date().toISOString()
@@ -2074,6 +2287,8 @@
             localStorage.setItem('animeYoutubeHighScores', JSON.stringify(scores));
             updateLeaderboardUI();
 
+            document.getElementById('saveScoreBtn').style.display = 'none';
+            showMessage('Highscore saved successfully!', 'success');
             gameState.score = 0;
             gameState.correct = 0;
             gameState.wrong = 0;
@@ -2121,6 +2336,26 @@
                 updateLeaderboardUI();
                 showMessage('Highscores cleared!', 'success');
             }
+            leaderboardList.innerHTML = scores.map((score, index) => {
+                const safeName = score.name ? score.name.replace(/[&<>"']/g, function(m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]; }) : 'Anonymous';
+                return `
+                <div class="leaderboard-item" style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border);">
+                    <span class="leaderboard-rank" style="font-weight: bold; color: var(--primary);">#${index + 1}</span>
+                    <span style="flex: 1; text-align: center;">👤 ${safeName} - ${new Date(score.date).toLocaleDateString()}</span>
+                    <span class="leaderboard-score" style="font-weight: bold;">${score.score} Pkt</span>
+            leaderboardList.innerHTML = scores.map((score, index) => `
+                <div class="leaderboard-item" style="display: flex; justify-content: space-between; margin-bottom: 8px; padding: 10px; background: #f8fafc; border-radius: 8px;">
+                    <span class="leaderboard-rank" style="font-weight: bold; color: var(--primary);">#${index + 1}</span>
+                    <span style="font-weight: bold; flex: 1; text-align: center;">${score.name || 'Anonymous'}</span>
+                    <span class="leaderboard-score" style="font-weight: bold; color: var(--success);">${score.score} Pkt</span>
+                <div class="leaderboard-item">
+                    <span class="leaderboard-rank">#${index + 1}</span>
+                    <span class="leaderboard-name">${score.name || 'Anonymous'}</span>
+                    <span class="leaderboard-date">${new Date(score.date).toLocaleDateString()}</span>
+                    <span><strong>${score.name || 'Anonymous'}</strong> - ${new Date(score.date).toLocaleDateString()}</span>
+                    <span class="leaderboard-score">${score.score} Pkt</span>
+                </div>
+            `}).join('');
         }
 
         function updateStats() {
@@ -2250,6 +2485,8 @@
         }
 
         function convertToYoutubeEmbed(link) {
+            if (!link || typeof link !== 'string') return null;
+
             const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
             const match = link.match(regex);
 
@@ -2310,6 +2547,10 @@
             document.getElementById('addContentForm').onsubmit = (e) => {
                 e.preventDefault();
                 const updatedTitle = document.getElementById('titleInput').value.trim();
+                const updatedYoutubeLink = document.getElementById('youtubeInput').value.trim();
+                const updatedDifficulty = parseInt(document.getElementById('difficultyInput').value);
+
+                if (!updatedTitle || !updatedYoutubeLink || !updatedDifficulty) {
                 const updatedYoutube = document.getElementById('youtubeInput').value.trim();
                 const updatedDifficulty = parseInt(document.getElementById('difficultyInput').value);
 
@@ -2318,6 +2559,7 @@
                     return;
                 }
 
+                const embedUrl = convertToYoutubeEmbed(updatedYoutubeLink);
                 const embedUrl = convertToYoutubeEmbed(updatedYoutube);
                 if (!embedUrl) {
                     showMessage('Invalid YouTube link! Example: https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'error');
