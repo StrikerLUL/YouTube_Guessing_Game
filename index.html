@@ -1599,7 +1599,7 @@
         function preprocessGameData() {
             if (gameData && gameData.items) {
                 gameData.items.forEach(item => {
-                    if (item.title) {
+                    if (item && typeof item.title === 'string') {
                         item.titleLower = item.title.toLowerCase();
                     }
                 });
@@ -1758,6 +1758,22 @@
 
             if (filteredItems.length === 0) {
                 if (gameState.currentDifficulty !== 'all') {
+                    showMessage('No entries available for this difficulty! Falling back to all difficulties.', 'warning');
+                    gameState.currentDifficulty = 'all';
+
+                    // Update UI button selection
+                    document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                        btn.classList.remove('selected');
+                    });
+                    const allBtn = document.querySelector('.difficulty-btn.all-difficulties');
+                    if (allBtn) allBtn.classList.add('selected');
+
+                    filteredItems = filterItems();
+                }
+
+                if (filteredItems.length === 0) {
+                    showMessage('No valid game items found! Resetting to default data...', 'error');
+                    createDefaultData();
                     showMessage('No entries available for this difficulty! Falling back to all difficulties...', 'warning');
                     gameState.currentDifficulty = 'all';
 
@@ -1828,6 +1844,10 @@
         }
 
         function filterItems() {
+            let filtered = gameData.items.filter(item =>
+                item &&
+                typeof item.title === 'string' && item.title.trim() !== '' &&
+                typeof item.youtube === 'string' && item.youtube.trim() !== ''
             // Aggressively filter out invalid/corrupted localStorage data
             let filtered = gameData.items.filter(item =>
                 item &&
@@ -1869,6 +1889,11 @@
             }
 
             // Filter items that contain the input text
+            const filteredItems = gameData.items.filter(item => {
+                if (!item || typeof item.title !== 'string') return false;
+                const titleToSearch = item.titleLower || item.title.toLowerCase();
+                return titleToSearch.includes(input);
+            });
             const filteredItems = gameData.items.filter(item =>
                 item && typeof item.title === 'string' && (item.titleLower || item.title.toLowerCase()).includes(input)
             );
@@ -1907,6 +1932,39 @@
             document.getElementById('answerInput').focus();
         }
 
+        function submitAnswer(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            if (gameState.gameOver || !gameState.videoStarted) return;
+
+            const input = document.getElementById('answerInput');
+            const answer = input.value.trim().toLowerCase();
+
+            // If the user submitted empty answer but timer is not out
+            if (answer === '' && gameState.timeLeft > 0) {
+                showMessage('Please enter an anime name before submitting!', 'warning');
+                return;
+            }
+
+            clearInterval(gameState.timerInterval);
+
+            // If it's a timeout (no answer), answer will be empty
+            gameState.gameOver = true;
+            input.disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('skipBtn').disabled = true;
+
+            let correct = false;
+            if (gameState.currentItem && typeof gameState.currentItem.title === 'string') {
+                const targetTitle = gameState.currentItem.titleLower || gameState.currentItem.title.toLowerCase();
+                correct = (answer === targetTitle);
+            }
+
+            if (correct) {
+                const basePoints = 100;
+                const difficultyBonus = (gameState.currentItem.difficulty || 5) * 5;
+                const hintsBonus = (3 - gameState.hintsUsed) * 10;
+                const speedBonus = gameSettings.timerDuration === 'off' ? 0 : gameState.timeLeft * 2;
+                const points = basePoints + difficultyBonus + hintsBonus + speedBonus;
         function calculateScore() {
             const basePoints = 100;
             const difficultyBonus = (gameState.currentItem.difficulty || 5) * 5;
