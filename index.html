@@ -1126,10 +1126,19 @@
                 </form>
             </div>
 
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-success btn-full" id="nextGameBtn" onclick="startNewGame()" style="display:none; flex: 1;">
+                    ▶️ Next Game
+                </button>
+                <button class="btn-primary btn-full" id="saveScoreBtn" onclick="promptSaveScore()" style="display:none; flex: 1; background: #8b5cf6;">
+                    💾 Save Score & End
+                </button>
+            </div>
             <button class="btn-success btn-full" id="nextGameBtn" onclick="startNewGame()" style="display:none;">
                 ▶️ Next Game
             </button>
             <button class="btn-primary btn-full" id="saveScoreBtn" onclick="saveHighScore()" style="display:none; margin-top: 10px;">
+                💾 Save High Score
                 💾 Save Highscore
             </button>
 
@@ -1341,6 +1350,20 @@
         const STORAGE_KEY = 'animeYoutubeGameData';
         const SETTINGS_KEY = 'animeYoutubeGameSettings';
 
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.toString().replace(/[&<>"']/g, function(m) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[m];
+            });
+        }
+
         let gameSettings = {
             mode: 'audio',  // 'audio' or 'video'
             blurIntensity: 15, // 0-30px
@@ -1461,6 +1484,7 @@
             items: [],
             lastPlayed: []
         };
+        let cachedStorageSize = '0.00';
 
         function init() {
             loadGameData();
@@ -1486,7 +1510,7 @@
         }
 
         function setupEventListeners() {
-            document.getElementById('addContentForm').addEventListener('submit', addContent);
+            document.getElementById('addContentForm').onsubmit = addContent;
         }
 
         function startMultiplayerGame() {
@@ -1586,10 +1610,30 @@
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) {
                 try {
-                    gameData = JSON.parse(stored);
-                    preprocessGameData();
+                    const parsedData = JSON.parse(stored);
+
+                    if (!parsedData || typeof parsedData !== 'object' || !Array.isArray(parsedData.items)) {
+                        throw new Error('Invalid data structure');
+                    }
+
+                    const validItems = parsedData.items.filter(item =>
+                        item &&
+                        typeof item.title === 'string' && item.title.trim() !== '' &&
+                        typeof item.youtube === 'string' && item.youtube.trim() !== ''
+                    );
+
+                    if (validItems.length === 0) {
+                        showMessage('No valid entries found in local storage! Loading defaults...', 'warning');
+                        gameData = { items: [], lastPlayed: [] };
+                    } else {
+                        parsedData.items = validItems;
+                        gameData = parsedData;
+                        cachedStorageSize = (stored.length / 1024).toFixed(2);
+                        preprocessGameData();
+                    }
                 } catch (e) {
                     console.error('Fehler beim Laden der Daten:', e);
+                    showMessage('Error loading saved data! Loading defaults...', 'error');
                     gameData = { items: [], lastPlayed: [] };
                 }
             }
@@ -1600,8 +1644,55 @@
             updateStats();
         }
 
-        function createDefaultData() {
-            if (gameData.items.length === 0) {
+        function saveHighScore() {
+            if (gameState.score <= 0) return;
+
+            const playerName = prompt('Enter your name for the high score:');
+            if (playerName && playerName.trim() !== '') {
+        function promptSaveScore() {
+            if (gameState.score <= 0) {
+                showMessage('No score to save yet!', 'warning');
+                return;
+            }
+
+            const playerName = prompt('Enter your name for the Highscore:');
+            if (playerName) {
+                const storedScores = localStorage.getItem('animeYoutubeHighScores');
+                let scores = storedScores ? JSON.parse(storedScores) : [];
+
+                scores.push({
+                    name: playerName.trim(),
+                    name: playerName,
+                    score: gameState.score,
+                    date: new Date().toISOString()
+                });
+
+                // Sort and keep top 5
+                scores.sort((a, b) => b.score - a.score);
+                scores = scores.slice(0, 5);
+
+                localStorage.setItem('animeYoutubeHighScores', JSON.stringify(scores));
+                updateLeaderboardUI();
+
+                document.getElementById('saveScoreBtn').style.display = 'none';
+                showMessage('High score saved successfully!', 'success');
+            }
+                // Reset game stats for single player
+                gameState.score = 0;
+                gameState.correct = 0;
+                gameState.wrong = 0;
+                updateStats();
+                startNewGame();
+                showMessage('Highscore saved successfully!', 'success');
+            }
+            const dataStr = JSON.stringify(gameData);
+            localStorage.setItem(STORAGE_KEY, dataStr);
+            cachedStorageSize = (dataStr.length / 1024).toFixed(2);
+            updateStats();
+        }
+
+        function createDefaultData(force = false) {
+            if (force || gameData.items.length === 0) {
                 gameData.items = [
                     {
                         id: 1,
@@ -1630,7 +1721,7 @@
             }
         }
 
-        function startNewGame() {
+        function handleMultiplayerRound() {
             if (gameState.isMultiplayer && gameState.gameOver) {
                 gameState.currentPlayerIndex++;
                 if (gameState.currentPlayerIndex >= gameState.players.length) {
@@ -1640,45 +1731,63 @@
 
                 if (gameState.currentRound > gameState.maxRounds) {
                     showScoreboard();
-                    return;
+                    return true;
                 }
             }
+            return false;
+        }
 
+        function resetGameState() {
             gameState.gameOver = false;
             gameState.hintsRemaining = 3;
             gameState.hintsUsed = 0;
             gameState.videoStarted = false;
             gameState.timeLeft = gameSettings.timerDuration === 'off' ? 9999 : parseInt(gameSettings.timerDuration || '30');
             clearInterval(gameState.timerInterval);
+        }
 
-            // Reset Timer UI
+        function resetTimerUI() {
             document.getElementById('timerWrapper').style.display = 'none';
             document.getElementById('timerCircle').style.strokeDashoffset = '0';
             document.getElementById('timerCircle').style.stroke = 'var(--primary)';
             document.getElementById('timerTextDisplay').textContent = gameSettings.timerDuration || '30';
+        }
 
+        function selectNewItem() {
             let filteredItems = filterItems();
+
             if (filteredItems.length === 0) {
-                showMessage('No entries available for this difficulty! Loading defaults...', 'warning');
-                createDefaultData();
-                gameState.currentDifficulty = 'all';
+                if (gameState.currentDifficulty !== 'all') {
+                    showMessage('No entries available for this difficulty! Falling back to all difficulties...', 'warning');
+                    gameState.currentDifficulty = 'all';
 
-                // Update UI button selection
-                document.querySelectorAll('.difficulty-btn').forEach(btn => {
-                    btn.classList.remove('selected');
-                });
-                const allBtn = document.querySelector('.difficulty-btn.all-difficulties');
-                if (allBtn) allBtn.classList.add('selected');
+                    document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('selected'));
+                    const allBtn = document.querySelector('.difficulty-btn.all-difficulties');
+                    if (allBtn) allBtn.classList.add('selected');
 
-                filteredItems = filterItems();
+                    filteredItems = filterItems();
+                }
+
+                if (filteredItems.length === 0) {
+                    showMessage('No valid entries found! Loading defaults...', 'warning');
+                    createDefaultData(true);
+                    filteredItems = filterItems();
+                }
             }
 
             gameState.currentItem = filteredItems[Math.floor(Math.random() * filteredItems.length)];
+        }
 
+        function resetGameUI() {
             document.getElementById('answerInput').value = '';
             document.getElementById('answerInput').disabled = true;
             document.getElementById('submitBtn').disabled = true;
             document.getElementById('nextGameBtn').style.display = 'none';
+            if (document.getElementById('saveScoreBtn')) {
+                document.getElementById('saveScoreBtn').style.display = 'none';
+            }
+            const saveScoreBtn = document.getElementById('saveScoreBtn');
+            if (saveScoreBtn) saveScoreBtn.style.display = 'none';
             document.getElementById('saveScoreBtn').style.display = 'none';
             document.getElementById('autocompleteList').classList.remove('active');
 
@@ -1694,6 +1803,17 @@
             document.getElementById('hintSection').classList.add('disabled');
             document.getElementById('formSection').classList.add('disabled');
             document.getElementById('startVideoBtn').style.display = 'block';
+        }
+
+        function startNewGame() {
+            if (handleMultiplayerRound()) {
+                return;
+            }
+
+            resetGameState();
+            resetTimerUI();
+            selectNewItem();
+            resetGameUI();
 
             // Update Button Text basierend auf Modus
             updateStartButtonText();
@@ -1703,7 +1823,14 @@
         }
 
         function filterItems() {
-            let filtered = gameData.items;
+            // Aggressively filter out invalid/corrupted localStorage data
+            let filtered = gameData.items.filter(item =>
+                item &&
+                typeof item.title === 'string' &&
+                item.title.trim() !== '' &&
+                typeof item.youtube === 'string' &&
+                item.youtube.trim() !== ''
+            );
 
             if (gameState.currentDifficulty !== 'all') {
                 filtered = filtered.filter(item => {
@@ -1736,12 +1863,11 @@
                 return;
             }
 
-            // Filter items that contain the input text
-            const filteredItems = gameData.items.filter(item =>
-                (item.titleLower || item.title.toLowerCase()).includes(input)
-            );
-
-            console.log('Autocomplete: Input="' + input + '", Found ' + filteredItems.length + ' items');
+            // Filter out invalid items and find those that contain the input text
+            const filteredItems = gameData.items.filter(item => {
+                if (!item || typeof item.title !== 'string' || item.title.trim() === '') return false;
+                return (item.titleLower || item.title.toLowerCase()).includes(input);
+            });
 
             if (filteredItems.length === 0) {
                 autocompleteList.classList.remove('active');
@@ -1762,13 +1888,76 @@
             });
 
             autocompleteList.classList.add('active');
-            console.log('Autocomplete: Showing ' + displayItems.length + ' suggestions');
         }
 
         function selectAutocomplete(title) {
             document.getElementById('answerInput').value = title;
             document.getElementById('autocompleteList').classList.remove('active');
             document.getElementById('answerInput').focus();
+        }
+
+        function calculateScore() {
+            const basePoints = 100;
+            const difficultyBonus = (gameState.currentItem.difficulty || 5) * 5;
+            const hintsBonus = (3 - gameState.hintsUsed) * 10;
+            const speedBonus = gameSettings.timerDuration === 'off' ? 0 : gameState.timeLeft * 2;
+            return basePoints + difficultyBonus + hintsBonus + speedBonus;
+        }
+
+        function updateScore(points, isCorrect) {
+            if (gameState.isMultiplayer && gameState.players && gameState.players.length > 0) {
+                const player = gameState.players[gameState.currentPlayerIndex];
+                if (isCorrect) {
+                    player.score += points;
+                    player.correct++;
+                } else {
+                    player.wrong++;
+                }
+            } else {
+                if (isCorrect) {
+                    gameState.correct++;
+                    gameState.score += points;
+                } else {
+                    gameState.wrong++;
+                }
+            }
+        }
+
+        function handleAnswerUI(isCorrect, points) {
+            if (isCorrect) {
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#6366f1', '#ec4899', '#10b981']
+                });
+
+                playSound('correct');
+                showResultModal(true, `Correct! It is "${gameState.currentItem.title}"`, points);
+            } else {
+                playSound('wrong');
+                showResultModal(false, `Wrong! It is "${gameState.currentItem.title}"`, 0);
+
+                const container = document.querySelector('.container');
+                if (container) {
+                    container.classList.add('shake');
+                    setTimeout(() => container.classList.remove('shake'), 500);
+                }
+            }
+
+            updateStats();
+            saveGameData();
+            document.getElementById('nextGameBtn').style.display = 'block';
+            if (!gameState.isMultiplayer && gameState.score > 0) {
+                document.getElementById('saveScoreBtn').style.display = 'block';
+            }
+            if (!gameState.isMultiplayer) {
+                const saveBtn = document.getElementById('saveScoreBtn');
+                if (saveBtn) saveBtn.style.display = 'block';
+            }
+            if (!gameState.isMultiplayer && gameState.score > 0) {
+                document.getElementById('saveScoreBtn').style.display = 'block';
+            }
         }
 
         function submitAnswer(e) {
@@ -1793,54 +1982,10 @@
             document.getElementById('skipBtn').disabled = true;
 
             const correct = answer === (gameState.currentItem.titleLower || gameState.currentItem.title.toLowerCase());
+            const points = correct ? calculateScore() : 0;
 
-            if (correct) {
-                const basePoints = 100;
-                const difficultyBonus = (gameState.currentItem.difficulty || 5) * 5;
-                const hintsBonus = (3 - gameState.hintsUsed) * 10;
-                const speedBonus = gameSettings.timerDuration === 'off' ? 0 : gameState.timeLeft * 2;
-                const points = basePoints + difficultyBonus + hintsBonus + speedBonus;
-
-                if (gameState.isMultiplayer && gameState.players && gameState.players.length > 0) {
-                    const player = gameState.players[gameState.currentPlayerIndex];
-                    player.score += points;
-                    player.correct++;
-                } else {
-                    gameState.correct++;
-                    gameState.score += points;
-                }
-
-                confetti({
-                    particleCount: 150,
-                    spread: 70,
-                    origin: { y: 0.6 },
-                    colors: ['#6366f1', '#ec4899', '#10b981']
-                });
-
-                playSound('correct');
-                showResultModal(true, `Correct! It is "${gameState.currentItem.title}"`, points);
-            } else {
-                if (gameState.isMultiplayer && gameState.players && gameState.players.length > 0) {
-                    gameState.players[gameState.currentPlayerIndex].wrong++;
-                } else {
-                    gameState.wrong++;
-                }
-                playSound('wrong');
-                showResultModal(false, `Wrong! It is "${gameState.currentItem.title}"`, 0);
-
-                const container = document.querySelector('.container');
-                if (container) {
-                    container.classList.add('shake');
-                    setTimeout(() => container.classList.remove('shake'), 500);
-                }
-            }
-
-            updateStats();
-            saveGameData();
-            document.getElementById('nextGameBtn').style.display = 'block';
-            if (!gameState.isMultiplayer && gameState.score > 0) {
-                document.getElementById('saveScoreBtn').style.display = 'block';
-            }
+            updateScore(points, correct);
+            handleAnswerUI(correct, points);
         }
 
         function revealHint() {
@@ -1867,6 +2012,8 @@
             document.getElementById('revealHintBtn').disabled = gameState.hintsRemaining <= 0;
         }
 
+        let resultScoreAnimationId = null;
+
         function showResultModal(isCorrect, message, points) {
             const modal = document.getElementById('resultModal');
             const title = document.getElementById('resultTitle');
@@ -1876,7 +2023,35 @@
             title.textContent = isCorrect ? '✅ Correct!' : '❌ Wrong!';
             title.className = 'modal-header ' + (isCorrect ? 'result-correct' : 'result-incorrect');
             msgDiv.textContent = message;
-            pointsDiv.textContent = `${isCorrect ? '+' : ''}${points} Points`;
+
+            if (resultScoreAnimationId) {
+                cancelAnimationFrame(resultScoreAnimationId);
+            }
+
+            if (points > 0) {
+                pointsDiv.textContent = `${isCorrect ? '+' : ''}0 Points`;
+                const duration = 1000;
+                let startTime = null;
+
+                function step(timestamp) {
+                    if (!startTime) startTime = timestamp;
+                    const progress = timestamp - startTime;
+                    const percentage = Math.min(progress / duration, 1);
+                    const easePercentage = 1 - Math.pow(1 - percentage, 3);
+                    const currentVal = Math.floor(points * easePercentage);
+
+                    pointsDiv.textContent = `${isCorrect ? '+' : ''}${currentVal} Points`;
+
+                    if (percentage < 1) {
+                        resultScoreAnimationId = requestAnimationFrame(step);
+                    } else {
+                        pointsDiv.textContent = `${isCorrect ? '+' : ''}${points} Points`;
+                    }
+                }
+                resultScoreAnimationId = requestAnimationFrame(step);
+            } else {
+                pointsDiv.textContent = `${isCorrect ? '+' : ''}${points} Points`;
+            }
 
             modal.classList.add('active');
         }
@@ -1891,7 +2066,7 @@
                 const crown = index === 0 ? '<span class="winner-crown">👑</span>' : '';
                 tr.innerHTML = `
                     <td>${index + 1}</td>
-                    <td>${crown}${player.name}</td>
+                    <td>${crown}${escapeHTML(player.name)}</td>
                     <td>${player.score}</td>
                     <td>${player.correct}</td>
                 `;
@@ -1979,12 +2154,31 @@
             const sanitizedName = playerName.replace(/[&<>"']/g, function(m) {
                 return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m];
             });
+            if (!gameState.isMultiplayer) {
+                const saveBtn = document.getElementById('saveScoreBtn');
+                if (saveBtn) saveBtn.style.display = 'block';
+            }
+            if (!gameState.isMultiplayer && gameState.score > 0) {
+                document.getElementById('saveScoreBtn').style.display = 'block';
+            }
+        }
+
+        function saveHighScore() {
+            if (gameState.score <= 0) {
+                showMessage('You need at least 1 point to save a high score!', 'warning');
+                return;
+            }
+            let playerName = prompt('Enter your name for the highscore:');
+            if (!playerName || playerName.trim() === '') return;
+
+            playerName = escapeHTML(playerName);
 
             const storedScores = localStorage.getItem('animeYoutubeHighScores');
             let scores = storedScores ? JSON.parse(storedScores) : [];
 
             scores.push({
                 name: sanitizedName,
+                name: playerName,
                 score: gameState.score,
                 date: new Date().toISOString()
             });
@@ -1997,6 +2191,12 @@
 
             document.getElementById('saveScoreBtn').style.display = 'none';
             showMessage('Highscore saved successfully!', 'success');
+            gameState.score = 0;
+            gameState.correct = 0;
+            gameState.wrong = 0;
+            updateStats();
+            document.getElementById('saveScoreBtn').style.display = 'none';
+            showMessage('Highscore saved!', 'success');
         }
 
         function updateLeaderboardUI() {
@@ -2009,14 +2209,26 @@
                 return;
             }
 
+            leaderboardList.innerHTML = scores.map((score, index) => {
+                const safeName = score.name ? score.name.replace(/[&<>"']/g, function(m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]; }) : 'Anonymous';
+                return `
+                <div class="leaderboard-item" style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border);">
+                    <span class="leaderboard-rank" style="font-weight: bold; color: var(--primary);">#${index + 1}</span>
+                    <span style="flex: 1; text-align: center;">👤 ${safeName} - ${new Date(score.date).toLocaleDateString()}</span>
+                    <span class="leaderboard-score" style="font-weight: bold;">${score.score} Pkt</span>
             leaderboardList.innerHTML = scores.map((score, index) => `
+                <div class="leaderboard-item" style="display: flex; justify-content: space-between; margin-bottom: 8px; padding: 10px; background: #f8fafc; border-radius: 8px;">
+                    <span class="leaderboard-rank" style="font-weight: bold; color: var(--primary);">#${index + 1}</span>
+                    <span style="font-weight: bold; flex: 1; text-align: center;">${score.name || 'Anonymous'}</span>
+                    <span class="leaderboard-score" style="font-weight: bold; color: var(--success);">${score.score} Pkt</span>
                 <div class="leaderboard-item">
                     <span class="leaderboard-rank">#${index + 1}</span>
                     <span class="leaderboard-name">${score.name || 'Anonymous'}</span>
                     <span class="leaderboard-date">${new Date(score.date).toLocaleDateString()}</span>
+                    <span><strong>${score.name || 'Anonymous'}</strong> - ${new Date(score.date).toLocaleDateString()}</span>
                     <span class="leaderboard-score">${score.score} Pkt</span>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function updateStats() {
@@ -2043,7 +2255,7 @@
             }
 
             const itemsCount = gameData.items.length;
-            const storageSize = (JSON.stringify(gameData).length / 1024).toFixed(2);
+            const storageSize = cachedStorageSize;
             document.getElementById('statsCount').textContent = itemsCount;
             document.getElementById('statsSize').textContent = storageSize + ' KB';
         }
@@ -2146,6 +2358,8 @@
         }
 
         function convertToYoutubeEmbed(link) {
+            if (!link || typeof link !== 'string') return null;
+
             const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
             const match = link.match(regex);
 
@@ -2172,7 +2386,7 @@
             list.innerHTML = gameData.items.map(item => `
                 <div class="item-card">
                     <div class="item-info">
-                        <div class="item-title">${item.title}</div>
+                        <div class="item-title">${escapeHTML(item.title)}</div>
                         <div class="item-meta">
                             Difficulty: ${'⭐'.repeat(Math.min(item.difficulty, 3))} (${item.difficulty}/10)
                         </div>
@@ -2206,10 +2420,28 @@
             document.getElementById('addContentForm').onsubmit = (e) => {
                 e.preventDefault();
                 const updatedTitle = document.getElementById('titleInput').value.trim();
+                const updatedYoutubeLink = document.getElementById('youtubeInput').value.trim();
                 const updatedDifficulty = parseInt(document.getElementById('difficultyInput').value);
+
+                if (!updatedTitle || !updatedYoutubeLink || !updatedDifficulty) {
+                const updatedYoutube = document.getElementById('youtubeInput').value.trim();
+                const updatedDifficulty = parseInt(document.getElementById('difficultyInput').value);
+
+                if (!updatedTitle || !updatedYoutube || !updatedDifficulty) {
+                    showMessage('Please fill in all fields!', 'error');
+                    return;
+                }
+
+                const embedUrl = convertToYoutubeEmbed(updatedYoutubeLink);
+                const embedUrl = convertToYoutubeEmbed(updatedYoutube);
+                if (!embedUrl) {
+                    showMessage('Invalid YouTube link! Example: https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'error');
+                    return;
+                }
 
                 item.title = updatedTitle;
                 item.titleLower = updatedTitle.toLowerCase();
+                item.youtube = embedUrl;
                 item.difficulty = updatedDifficulty;
                 saveGameData();
 
