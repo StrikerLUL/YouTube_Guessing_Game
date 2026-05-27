@@ -1768,6 +1768,11 @@
                     filteredItems = filterItems();
                 }
 
+                filteredItems = filterItems();
+
+                if (filteredItems.length === 0) {
+                    showMessage('Error: No valid entries found. Please check your data.', 'error');
+                    return;
                 if (filteredItems.length === 0) {
                     showMessage('No valid entries found! Loading defaults...', 'warning');
                     createDefaultData(true);
@@ -1863,6 +1868,12 @@
                 return;
             }
 
+            // Filter items that contain the input text
+            const filteredItems = gameData.items.filter(item =>
+                item && typeof item.title === 'string' && (item.titleLower || item.title.toLowerCase()).includes(input)
+            );
+
+            console.log('Autocomplete: Input="' + input + '", Found ' + filteredItems.length + ' items');
             // Filter out invalid items and find those that contain the input text
             const filteredItems = gameData.items.filter(item => {
                 if (!item || typeof item.title !== 'string' || item.title.trim() === '') return false;
