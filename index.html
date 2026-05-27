@@ -1686,6 +1686,13 @@
                 }
             }
 
+            if (filteredItems.length === 0) {
+                showMessage('Critical Error: Game data is missing or invalid! Unable to start a new round.', 'error');
+                gameState.currentItem = null;
+                resetGameUI();
+                return;
+            }
+
             gameState.currentItem = filteredItems[Math.floor(Math.random() * filteredItems.length)];
         }
 
@@ -1863,8 +1870,16 @@
             if (e && e.preventDefault) e.preventDefault();
             if (gameState.gameOver || !gameState.videoStarted) return;
 
+            if (!gameState.currentItem || !gameState.currentItem.title) {
+                showMessage('Error: Invalid game state. Skipping round...', 'error');
+                skipGame();
+                return;
+            }
+
             const input = document.getElementById('answerInput');
-            const answer = input.value.trim().toLowerCase();
+            if (!input) return;
+
+            const answer = (input.value || '').trim().toLowerCase();
 
             // If the user submitted empty answer but timer is not out
             if (answer === '' && gameState.timeLeft > 0) {
@@ -1877,8 +1892,12 @@
             // If it's a timeout (no answer), answer will be empty
             gameState.gameOver = true;
             input.disabled = true;
-            document.getElementById('submitBtn').disabled = true;
-            document.getElementById('skipBtn').disabled = true;
+
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) submitBtn.disabled = true;
+
+            const skipBtn = document.getElementById('skipBtn');
+            if (skipBtn) skipBtn.disabled = true;
 
             const correct = answer === (gameState.currentItem.titleLower || gameState.currentItem.title.toLowerCase());
             const points = correct ? calculateScore() : 0;
@@ -2225,6 +2244,10 @@
         }
 
         function convertToYoutubeEmbed(link) {
+            if (!link || typeof link !== 'string' || link.trim() === '') {
+                return null;
+            }
+
             const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
             const match = link.match(regex);
 
