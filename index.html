@@ -1103,6 +1103,7 @@
                 ▶️ Next Game
             </button>
             <button class="btn-primary btn-full" id="saveScoreBtn" onclick="saveHighScore()" style="display:none; margin-top: 10px;">
+                💾 Save High Score
                 💾 Save Highscore
             </button>
 
@@ -1608,6 +1609,11 @@
             updateStats();
         }
 
+        function saveHighScore() {
+            if (gameState.score <= 0) return;
+
+            const playerName = prompt('Enter your name for the high score:');
+            if (playerName && playerName.trim() !== '') {
         function promptSaveScore() {
             if (gameState.score <= 0) {
                 showMessage('No score to save yet!', 'warning');
@@ -1620,6 +1626,7 @@
                 let scores = storedScores ? JSON.parse(storedScores) : [];
 
                 scores.push({
+                    name: playerName.trim(),
                     name: playerName,
                     score: gameState.score,
                     date: new Date().toISOString()
@@ -1632,6 +1639,9 @@
                 localStorage.setItem('animeYoutubeHighScores', JSON.stringify(scores));
                 updateLeaderboardUI();
 
+                document.getElementById('saveScoreBtn').style.display = 'none';
+                showMessage('High score saved successfully!', 'success');
+            }
                 // Reset game stats for single player
                 gameState.score = 0;
                 gameState.correct = 0;
@@ -1738,6 +1748,9 @@
             document.getElementById('answerInput').disabled = true;
             document.getElementById('submitBtn').disabled = true;
             document.getElementById('nextGameBtn').style.display = 'none';
+            if (document.getElementById('saveScoreBtn')) {
+                document.getElementById('saveScoreBtn').style.display = 'none';
+            }
             const saveScoreBtn = document.getElementById('saveScoreBtn');
             if (saveScoreBtn) saveScoreBtn.style.display = 'none';
             document.getElementById('saveScoreBtn').style.display = 'none';
@@ -1900,6 +1913,9 @@
             updateStats();
             saveGameData();
             document.getElementById('nextGameBtn').style.display = 'block';
+            if (!gameState.isMultiplayer && gameState.score > 0) {
+                document.getElementById('saveScoreBtn').style.display = 'block';
+            }
             if (!gameState.isMultiplayer) {
                 const saveBtn = document.getElementById('saveScoreBtn');
                 if (saveBtn) saveBtn.style.display = 'block';
@@ -2091,6 +2107,9 @@
             updateStats();
             saveGameData();
             document.getElementById('nextGameBtn').style.display = 'block';
+            if (!gameState.isMultiplayer && gameState.score > 0) {
+                document.getElementById('saveScoreBtn').style.display = 'block';
+            }
             if (!gameState.isMultiplayer) {
                 const saveBtn = document.getElementById('saveScoreBtn');
                 if (saveBtn) saveBtn.style.display = 'block';
@@ -2143,6 +2162,13 @@
                 return;
             }
 
+            leaderboardList.innerHTML = scores.map((score, index) => {
+                const safeName = score.name ? score.name.replace(/[&<>"']/g, function(m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]; }) : 'Anonymous';
+                return `
+                <div class="leaderboard-item" style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border);">
+                    <span class="leaderboard-rank" style="font-weight: bold; color: var(--primary);">#${index + 1}</span>
+                    <span style="flex: 1; text-align: center;">👤 ${safeName} - ${new Date(score.date).toLocaleDateString()}</span>
+                    <span class="leaderboard-score" style="font-weight: bold;">${score.score} Pkt</span>
             leaderboardList.innerHTML = scores.map((score, index) => `
                 <div class="leaderboard-item" style="display: flex; justify-content: space-between; margin-bottom: 8px; padding: 10px; background: #f8fafc; border-radius: 8px;">
                     <span class="leaderboard-rank" style="font-weight: bold; color: var(--primary);">#${index + 1}</span>
@@ -2153,7 +2179,7 @@
                     <span><strong>${score.name || 'Anonymous'}</strong> - ${new Date(score.date).toLocaleDateString()}</span>
                     <span class="leaderboard-score">${score.score} Pkt</span>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function updateStats() {
