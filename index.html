@@ -954,6 +954,41 @@
             font-size: 1.5em;
             margin-right: 10px;
         }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: #f9f9f9;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .leaderboard-rank {
+            font-weight: bold;
+            color: var(--primary);
+            width: 30px;
+        }
+
+        .leaderboard-name {
+            font-weight: bold;
+            flex-grow: 1;
+            text-align: left;
+            margin-left: 10px;
+        }
+
+        .leaderboard-date {
+            font-size: 0.85em;
+            color: #666;
+            margin-right: 15px;
+        }
+
+        .leaderboard-score {
+            font-weight: bold;
+            color: var(--success);
+        }
     </style>
 </head>
 
@@ -2110,6 +2145,15 @@
             if (!gameState.isMultiplayer && gameState.score > 0) {
                 document.getElementById('saveScoreBtn').style.display = 'block';
             }
+        }
+
+        function saveHighScore() {
+            const playerName = prompt('Enter your name for the highscore:');
+            if (!playerName || playerName.trim() === '') return;
+
+            const sanitizedName = playerName.replace(/[&<>"']/g, function(m) {
+                return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m];
+            });
             if (!gameState.isMultiplayer) {
                 const saveBtn = document.getElementById('saveScoreBtn');
                 if (saveBtn) saveBtn.style.display = 'block';
@@ -2133,6 +2177,7 @@
             let scores = storedScores ? JSON.parse(storedScores) : [];
 
             scores.push({
+                name: sanitizedName,
                 name: playerName,
                 score: gameState.score,
                 date: new Date().toISOString()
@@ -2144,6 +2189,8 @@
             localStorage.setItem('animeYoutubeHighScores', JSON.stringify(scores));
             updateLeaderboardUI();
 
+            document.getElementById('saveScoreBtn').style.display = 'none';
+            showMessage('Highscore saved successfully!', 'success');
             gameState.score = 0;
             gameState.correct = 0;
             gameState.wrong = 0;
@@ -2176,6 +2223,8 @@
                     <span class="leaderboard-score" style="font-weight: bold; color: var(--success);">${score.score} Pkt</span>
                 <div class="leaderboard-item">
                     <span class="leaderboard-rank">#${index + 1}</span>
+                    <span class="leaderboard-name">${score.name || 'Anonymous'}</span>
+                    <span class="leaderboard-date">${new Date(score.date).toLocaleDateString()}</span>
                     <span><strong>${score.name || 'Anonymous'}</strong> - ${new Date(score.date).toLocaleDateString()}</span>
                     <span class="leaderboard-score">${score.score} Pkt</span>
                 </div>
