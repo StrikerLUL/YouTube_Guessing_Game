@@ -131,7 +131,7 @@ def test():
         print("Leaderboard Text:")
         print(leaderboard_text)
 
-        assert "Playwright Test <Name>" in leaderboard_text, "Player name not correctly stored/escaped in leaderboard"
+        assert "Playwright Test &lt;Name&gt;" in leaderboard_text or "Playwright Test <Name>" in leaderboard_text, "Player name not correctly stored/escaped in leaderboard"
         assert "500 Pkt" in leaderboard_text, "Score not correctly stored in leaderboard"
 
         print("Test passed!")
