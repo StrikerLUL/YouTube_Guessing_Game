@@ -1130,17 +1130,10 @@
                 <button class="btn-success btn-full" id="nextGameBtn" onclick="startNewGame()" style="display:none; flex: 1;">
                     ▶️ Next Game
                 </button>
-                <button class="btn-primary btn-full" id="saveScoreBtn" onclick="promptSaveScore()" style="display:none; flex: 1; background: #8b5cf6;">
+                <button class="btn-primary btn-full" id="saveScoreBtn" onclick="saveHighScore()" style="display:none; flex: 1; background: #8b5cf6;">
                     💾 Save Score & End
                 </button>
             </div>
-            <button class="btn-success btn-full" id="nextGameBtn" onclick="startNewGame()" style="display:none;">
-                ▶️ Next Game
-            </button>
-            <button class="btn-primary btn-full" id="saveScoreBtn" onclick="saveHighScore()" style="display:none; margin-top: 10px;">
-                💾 Save High Score
-                💾 Save Highscore
-            </button>
 
             <!-- Leaderboard Section -->
             <div id="leaderboardSection" style="margin-top: 40px; text-align: center;">
@@ -1647,43 +1640,6 @@
             updateStats();
         }
 
-        function promptSaveScore() {
-            if (gameState.score <= 0) {
-                showMessage('No score to save yet!', 'warning');
-                return;
-            }
-
-            let playerName = prompt('Enter your name for the Highscore:');
-            if (playerName && playerName.trim() !== '') {
-                playerName = escapeHTML(playerName.trim());
-                const storedScores = localStorage.getItem('animeYoutubeHighScores');
-                let scores = storedScores ? JSON.parse(storedScores) : [];
-
-                scores.push({
-                    name: playerName,
-                    score: gameState.score,
-                    date: new Date().toISOString()
-                });
-
-                // Sort and keep top 5
-                scores.sort((a, b) => b.score - a.score);
-                scores = scores.slice(0, 5);
-
-                localStorage.setItem('animeYoutubeHighScores', JSON.stringify(scores));
-                updateLeaderboardUI();
-
-                document.getElementById('saveScoreBtn').style.display = 'none';
-                showMessage('Highscore saved successfully!', 'success');
-
-                // Reset game stats for single player
-                gameState.score = 0;
-                gameState.correct = 0;
-                gameState.wrong = 0;
-                updateStats();
-                startNewGame();
-            }
-        }
-
         function createDefaultData(force = false) {
             if (force || gameData.items.length === 0) {
                 gameData.items = [
@@ -2055,31 +2011,6 @@
             }
 
             modal.classList.add('active');
-
-            if (isCorrect && points > 0) {
-                const duration = 1000;
-                let startTimestamp = null;
-                const startPoints = 0;
-
-                const step = (timestamp) => {
-                    if (!startTimestamp) startTimestamp = timestamp;
-                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                    // Ease out
-                    const easeProgress = 1 - Math.pow(1 - progress, 3);
-
-                    const currentPoints = Math.floor(easeProgress * points);
-                    pointsDiv.textContent = `+${currentPoints} Points`;
-
-                    if (progress < 1) {
-                        requestAnimationFrame(step);
-                    } else {
-                        pointsDiv.textContent = `+${points} Points`;
-                    }
-                };
-                requestAnimationFrame(step);
-            } else if (!isCorrect) {
-                pointsDiv.textContent = '0 Points';
-            }
         }
 
         function showScoreboard() {
@@ -2206,6 +2137,7 @@
             gameState.correct = 0;
             gameState.wrong = 0;
             updateStats();
+            startNewGame();
         }
 
         function updateLeaderboardUI() {
