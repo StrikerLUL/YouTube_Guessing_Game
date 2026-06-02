@@ -1823,6 +1823,10 @@
         }
 
         function filterItems() {
+            if (!gameData || !Array.isArray(gameData.items)) {
+                return [];
+            }
+
             // Aggressively filter out invalid/corrupted localStorage data
             let filtered = gameData.items.filter(item =>
                 item &&
@@ -2083,6 +2087,12 @@
         }
 
         function showScoreboard() {
+            if (!gameState.players || !Array.isArray(gameState.players) || gameState.players.length === 0) {
+                showMessage('Error: No players found for scoreboard!', 'error');
+                startNewGame();
+                return;
+            }
+
             const sortedPlayers = [...gameState.players].sort((a, b) => b.score - a.score);
             const tbody = document.getElementById('scoreboardBody');
             tbody.innerHTML = '';
@@ -2481,6 +2491,11 @@
         }
 
         function exportData() {
+            if (!gameData || !Array.isArray(gameData.items) || gameData.items.length === 0) {
+                showMessage('Error: Cannot export empty data. Please add videos first!', 'error');
+                return;
+            }
+
             const dataStr = JSON.stringify(gameData, null, 2);
             const dataBlob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(dataBlob);
