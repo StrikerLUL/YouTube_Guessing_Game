@@ -1543,7 +1543,10 @@
         }
 
         function startVideo() {
-            if (!gameState.currentItem) return;
+            if (!gameState.currentItem) {
+                showMessage('Fehler: Kein gültiges Video gefunden! Bitte überprüfe die Datenbank.', 'error');
+                return;
+            }
 
             gameState.videoStarted = true;
 
@@ -1640,6 +1643,11 @@
         }
 
         function createDefaultData(force = false) {
+            if (!gameData || !Array.isArray(gameData.items)) {
+                showMessage('Kritischer Fehler: Video-Array ist ungültig oder leer. Setze Daten zurück...', 'error');
+                gameData = { items: [], lastPlayed: [] };
+                force = true;
+            }
             if (force || gameData.items.length === 0) {
                 gameData.items = [
                     {
@@ -2285,8 +2293,18 @@
             const youtubeLink = document.getElementById('youtubeInput').value.trim();
             const difficulty = parseInt(document.getElementById('difficultyInput').value);
 
-            if (!title || !youtubeLink || !difficulty) {
-                showMessage('Please fill in all fields!', 'error');
+            if (!title || !youtubeLink || isNaN(difficulty)) {
+                showMessage('Please fill in all fields with valid information!', 'error');
+                return;
+            }
+
+            if (difficulty < 1 || difficulty > 10) {
+                showMessage('Difficulty must be between 1 and 10!', 'error');
+                return;
+            }
+
+            if (!gameData || !Array.isArray(gameData.items)) {
+                showMessage('Fehler: Video-Array ist leer oder ungültig!', 'error');
                 return;
             }
 
@@ -2364,6 +2382,11 @@
         }
 
         function editItem(id) {
+            if (!gameData || !Array.isArray(gameData.items)) {
+                showMessage('Fehler: Video-Array ist leer oder ungültig!', 'error');
+                return;
+            }
+
             const item = gameData.items.find(i => i.id === id);
             if (!item) return;
 
@@ -2383,8 +2406,13 @@
                 const updatedYoutubeLink = document.getElementById('youtubeInput').value.trim();
                 const updatedDifficulty = parseInt(document.getElementById('difficultyInput').value);
 
-                if (!updatedTitle || !updatedYoutubeLink || !updatedDifficulty) {
-                    showMessage('Please fill in all fields!', 'error');
+                if (!updatedTitle || !updatedYoutubeLink || isNaN(updatedDifficulty)) {
+                    showMessage('Please fill in all fields with valid information!', 'error');
+                    return;
+                }
+
+                if (updatedDifficulty < 1 || updatedDifficulty > 10) {
+                    showMessage('Difficulty must be between 1 and 10!', 'error');
                     return;
                 }
 
@@ -2410,6 +2438,11 @@
         }
 
         function deleteItem(id) {
+            if (!gameData || !Array.isArray(gameData.items)) {
+                showMessage('Fehler: Video-Array ist leer oder ungültig!', 'error');
+                return;
+            }
+
             if (!confirm('Really delete?')) return;
 
             const index = gameData.items.findIndex(i => i.id === id);
