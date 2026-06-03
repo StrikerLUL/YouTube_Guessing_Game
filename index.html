@@ -1549,18 +1549,17 @@
 
             // Lade das Video erst jetzt mit Autoplay
             const youtubeLink = gameState.currentItem.youtube;
+            const embedUrl = convertToYoutubeEmbed(youtubeLink);
 
-            if (!youtubeLink) {
-                showMessage('Error: Missing YouTube link for this entry! Skipping...', 'error');
+            if (!embedUrl) {
+                showMessage('Error: Missing or invalid YouTube link for this entry! Skipping...', 'error');
                 setTimeout(() => skipGame(), 1500);
                 return;
             }
 
             const youtubePlayer = document.getElementById('youtubePlayer');
-            if (youtubeLink) {
-                const autoplayUrl = youtubeLink + (youtubeLink.includes('?') ? '&' : '?') + 'autoplay=1';
-                youtubePlayer.src = autoplayUrl;
-            }
+            const autoplayUrl = embedUrl + (embedUrl.includes('?') ? '&' : '?') + 'autoplay=1';
+            youtubePlayer.src = autoplayUrl;
 
             // Audio-Only Modus
             if (gameSettings.mode === 'audio') {
@@ -1593,7 +1592,7 @@
 
 
         function preprocessGameData() {
-            if (gameData && gameData.items) {
+            if (gameData && Array.isArray(gameData.items)) {
                 gameData.items.forEach(item => {
                     if (item && typeof item.title === 'string') {
                         item.titleLower = item.title.toLowerCase();
@@ -1818,7 +1817,7 @@
             const input = document.getElementById('answerInput').value.trim().toLowerCase();
             const autocompleteList = document.getElementById('autocompleteList');
 
-            if (input.length === 0) {
+            if (input.length === 0 || !gameData || !Array.isArray(gameData.items)) {
                 autocompleteList.classList.remove('active');
                 return;
             }
@@ -2104,7 +2103,8 @@
             document.getElementById('skipBtn').disabled = true;
 
             playSound('wrong');
-            showResultModal(false, `Skipped! It was "${gameState.currentItem.title}"`, 0);
+            const title = (gameState.currentItem && gameState.currentItem.title) ? gameState.currentItem.title : 'Unknown';
+            showResultModal(false, `Skipped! It was "${title}"`, 0);
 
             updateStats();
             saveGameData();
@@ -2214,7 +2214,7 @@
                 document.getElementById('accuracy').textContent = accuracy + '%';
             }
 
-            const itemsCount = gameData.items.length;
+            const itemsCount = gameData && Array.isArray(gameData.items) ? gameData.items.length : 0;
             const storageSize = cachedStorageSize;
             document.getElementById('statsCount').textContent = itemsCount;
             document.getElementById('statsSize').textContent = storageSize + ' KB';
@@ -2338,7 +2338,7 @@
         function refreshManageTab() {
             const list = document.getElementById('itemsList');
 
-            if (gameData.items.length === 0) {
+            if (!gameData || !Array.isArray(gameData.items) || gameData.items.length === 0) {
                 list.innerHTML = '<p style="color: #999;">No entries found.</p>';
                 return;
             }
