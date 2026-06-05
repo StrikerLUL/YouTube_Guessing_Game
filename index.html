@@ -1595,12 +1595,27 @@
 
 
         function preprocessGameData() {
-            if (gameData && Array.isArray(gameData.items)) {
-                gameData.items.forEach(item => {
-                    if (item && typeof item.title === 'string') {
-                        item.titleLower = item.title.toLowerCase();
-                    }
-                });
+            if (!gameData || !Array.isArray(gameData.items) || gameData.items.length === 0) {
+                showMessage('Kritischer Fehler: Video-Array ist ungültig oder leer. Setze Daten zurück...', 'error');
+                createDefaultData(true);
+                return;
+            }
+
+            const validItems = [];
+            gameData.items.forEach(item => {
+                if (item && typeof item.title === 'string' && item.title.trim() !== '' && typeof item.youtube === 'string' && item.youtube.trim() !== '') {
+                    item.titleLower = item.title.toLowerCase();
+                    validItems.push(item);
+                } else {
+                    console.warn('Überspringe fehlerhaften Eintrag (z.B. ungültige Antworten, fehlende YouTube IDs):', item);
+                }
+            });
+
+            if (validItems.length === 0) {
+                showMessage('Fehler: Keine gültigen Videos gefunden nach Filterung! Lade Standarddaten...', 'error');
+                createDefaultData(true);
+            } else {
+                gameData.items = validItems;
             }
         }
 
