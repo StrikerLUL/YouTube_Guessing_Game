@@ -1614,13 +1614,29 @@
 
 
         function preprocessGameData() {
-            if (gameData && Array.isArray(gameData.items)) {
-                gameData.items.forEach(item => {
-                    if (item && typeof item.title === 'string') {
-                        item.titleLower = item.title.toLowerCase();
-                    }
-                });
+            if (!gameData || !Array.isArray(gameData.items) || gameData.items.length === 0) {
+                showMessage('Warning: Video array is empty or invalid. Resetting to defaults...', 'warning');
+                createDefaultData(true);
+                return;
             }
+
+            const validItems = gameData.items.filter(item =>
+                item &&
+                typeof item.title === 'string' && item.title.trim() !== '' &&
+                typeof item.youtube === 'string' && item.youtube.trim() !== ''
+            );
+
+            if (validItems.length === 0) {
+                showMessage('Error: No valid game items found! Resetting to default data...', 'error');
+                createDefaultData(true);
+                return;
+            }
+
+            validItems.forEach(item => {
+                item.titleLower = item.title.toLowerCase();
+            });
+
+            gameData.items = validItems;
         }
 
         function loadGameData() {
