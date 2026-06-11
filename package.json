@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "canvas-confetti": "^1.9.4",
     "jsdom": "^29.1.1"
   }
 }
