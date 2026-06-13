@@ -2020,18 +2020,30 @@
                 const duration = 1000;
                 let startTime = null;
 
+                // Start counting from 0 instead of just jumping to the value or looking like it does not count
+                let currentDisplayedPoints = 0;
+                pointsDiv.textContent = `${isCorrect ? '+' : ''}0 Points`;
+                pointsDiv.style.transform = 'scale(1.3)';
+                pointsDiv.style.transition = 'transform 0.1s ease-in-out';
+
                 function step(timestamp) {
                     if (!startTime) startTime = timestamp;
                     const progress = timestamp - startTime;
                     const percentage = Math.min(progress / duration, 1);
                     const easePercentage = 1 - Math.pow(1 - percentage, 3);
-                    const currentVal = Math.floor(points * easePercentage);
 
-                    pointsDiv.textContent = `${isCorrect ? '+' : ''}${currentVal} Points`;
+                    const nextVal = Math.floor(points * easePercentage);
+
+                    // only update DOM if value changed to save reflows
+                    if (nextVal !== currentDisplayedPoints) {
+                        currentDisplayedPoints = nextVal;
+                        pointsDiv.textContent = `${isCorrect ? '+' : ''}${currentDisplayedPoints} Points`;
+                    }
 
                     if (percentage < 1) {
                         resultScoreAnimationId = requestAnimationFrame(step);
                     } else {
+                        pointsDiv.style.transform = 'scale(1)';
                         pointsDiv.textContent = `${isCorrect ? '+' : ''}${points} Points`;
                     }
                 }
