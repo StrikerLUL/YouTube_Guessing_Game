@@ -1679,6 +1679,24 @@
         }
 
         function saveGameData() {
+            if (!gameData || !Array.isArray(gameData.items) || gameData.items.length === 0) {
+                showMessage('Fehler beim Speichern: Video-Array ist leer oder ungültig!', 'error');
+                return;
+            }
+
+            const validItems = gameData.items.filter(item =>
+                item &&
+                typeof item.title === 'string' && item.title.trim() !== '' &&
+                typeof item.youtube === 'string' && item.youtube.trim() !== ''
+            );
+
+            if (validItems.length === 0) {
+                showMessage('Fehler beim Speichern: Keine gültigen Videos vorhanden!', 'error');
+                return;
+            }
+
+            gameData.items = validItems;
+
             localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
             updateStats();
         }
@@ -2519,11 +2537,27 @@
 
         function exportData() {
             if (!gameData || !Array.isArray(gameData.items) || gameData.items.length === 0) {
-                showMessage('Error: Cannot export empty data. Please add videos first!', 'error');
+                showMessage('Fehler: Video-Array ist leer oder ungültig! Bitte füge zuerst Videos hinzu.', 'error');
                 return;
             }
 
-            const dataStr = JSON.stringify(gameData, null, 2);
+            const validItems = gameData.items.filter(item =>
+                item &&
+                typeof item.title === 'string' && item.title.trim() !== '' &&
+                typeof item.youtube === 'string' && item.youtube.trim() !== ''
+            );
+
+            if (validItems.length === 0) {
+                showMessage('Fehler: Keine gültigen Videos zum Exportieren gefunden!', 'error');
+                return;
+            }
+
+            if (validItems.length < gameData.items.length) {
+                showMessage(`Warnung: ${gameData.items.length - validItems.length} fehlerhafte Videos wurden beim Export ignoriert.`, 'warning');
+            }
+
+            const exportObj = { ...gameData, items: validItems };
+            const dataStr = JSON.stringify(exportObj, null, 2);
             const dataBlob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(dataBlob);
             const link = document.createElement('a');
@@ -2531,7 +2565,7 @@
             link.download = `anime-youtube-game-pro-${new Date().getTime()}.json`;
             link.click();
             URL.revokeObjectURL(url);
-            showMessage('Data exported!', 'success');
+            showMessage('Daten erfolgreich exportiert!', 'success');
         }
 
         function importData(e) {
