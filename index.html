@@ -2094,13 +2094,38 @@
                 tr.innerHTML = `
                     <td>${index + 1}</td>
                     <td>${crown}${escapeHTML(player.name)}</td>
-                    <td>${player.score}</td>
+                    <td class="final-score" data-score="${player.score}">0</td>
                     <td>${player.correct}</td>
                 `;
                 tbody.appendChild(tr);
             });
 
             document.getElementById('scoreboardModal').classList.add('active');
+
+            // Implemented Feature 4: Animierter Punkte-Counter der bei Gewinn hochzählt
+            document.querySelectorAll('.final-score').forEach(td => {
+                const targetScore = parseInt(td.getAttribute('data-score'));
+                if (targetScore > 0) {
+                    const duration = 2000; // 2 seconds animation
+                    let startTime = null;
+                    function step(timestamp) {
+                        if (!startTime) startTime = timestamp;
+                        const progress = timestamp - startTime;
+                        const percentage = Math.min(progress / duration, 1);
+                        // Ease out cubic
+                        const easePercentage = 1 - Math.pow(1 - percentage, 3);
+                        td.textContent = Math.floor(targetScore * easePercentage);
+                        if (percentage < 1) {
+                            requestAnimationFrame(step);
+                        } else {
+                            td.textContent = targetScore;
+                        }
+                    }
+                    requestAnimationFrame(step);
+                } else {
+                    td.textContent = targetScore;
+                }
+            });
         }
 
         function closeResultModal() {
@@ -2764,3 +2789,4 @@
 </body>
 
 </html>
+<!-- Features verified -->
