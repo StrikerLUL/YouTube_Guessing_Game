@@ -1679,7 +1679,9 @@
         }
 
         function saveGameData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
+            const dataString = JSON.stringify(gameData);
+            localStorage.setItem(STORAGE_KEY, dataString);
+            cachedStorageSize = (dataString.length / 1024).toFixed(2);
             updateStats();
         }
 
@@ -2088,19 +2090,50 @@
             const tbody = document.getElementById('scoreboardBody');
             tbody.innerHTML = '';
 
+            // Store references to the score cells so we can animate them
+            const scoreCells = [];
+
             sortedPlayers.forEach((player, index) => {
                 const tr = document.createElement('tr');
                 const crown = index === 0 ? '<span class="winner-crown">👑</span>' : '';
                 tr.innerHTML = `
                     <td>${index + 1}</td>
                     <td>${crown}${escapeHTML(player.name)}</td>
-                    <td>${player.score}</td>
+                    <td class="scoreboard-score-cell">0</td>
                     <td>${player.correct}</td>
                 `;
                 tbody.appendChild(tr);
+                // The third child is the score cell
+                scoreCells.push({ element: tr.children[2], targetScore: player.score });
             });
 
             document.getElementById('scoreboardModal').classList.add('active');
+
+            // Animate scores
+            const duration = 1500; // ms
+            let startTime = null;
+
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const progress = timestamp - startTime;
+                const percentage = Math.min(progress / duration, 1);
+                // Ease out
+                const easePercentage = 1 - Math.pow(1 - percentage, 3);
+
+                scoreCells.forEach(cellObj => {
+                    const currentDisplayedPoints = Math.floor(cellObj.targetScore * easePercentage);
+                    cellObj.element.textContent = currentDisplayedPoints;
+                });
+
+                if (percentage < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    scoreCells.forEach(cellObj => {
+                        cellObj.element.textContent = cellObj.targetScore;
+                    });
+                }
+            }
+            requestAnimationFrame(step);
         }
 
         function closeResultModal() {
