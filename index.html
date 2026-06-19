@@ -2094,10 +2094,32 @@
                 tr.innerHTML = `
                     <td>${index + 1}</td>
                     <td>${crown}${escapeHTML(player.name)}</td>
-                    <td>${player.score}</td>
+                    <td id="sb-score-${index}">0</td>
                     <td>${player.correct}</td>
                 `;
                 tbody.appendChild(tr);
+
+                // Animate score counter
+                const targetScore = player.score;
+                const displayEl = tr.querySelector(`#sb-score-${index}`);
+                const duration = 1500;
+                let startTime = null;
+
+                function step(timestamp) {
+                    if (!startTime) startTime = timestamp;
+                    const progress = timestamp - startTime;
+                    const percentage = Math.min(progress / duration, 1);
+                    const easePercentage = 1 - Math.pow(1 - percentage, 3);
+
+                    displayEl.textContent = Math.floor(targetScore * easePercentage);
+
+                    if (percentage < 1) {
+                        requestAnimationFrame(step);
+                    } else {
+                        displayEl.textContent = targetScore;
+                    }
+                }
+                requestAnimationFrame(step);
             });
 
             document.getElementById('scoreboardModal').classList.add('active');
