@@ -1679,7 +1679,28 @@
         }
 
         function saveGameData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
+            if (!gameData || !Array.isArray(gameData.items)) {
+                showMessage('Fehler: Keine gültigen Daten zum Speichern vorhanden!', 'error');
+                return;
+            }
+
+            const validItems = gameData.items.filter(item =>
+                item &&
+                typeof item.title === 'string' && item.title.trim() !== '' &&
+                typeof item.youtube === 'string' && item.youtube.trim() !== ''
+            );
+
+            if (validItems.length === 0 && gameData.items.length > 0) {
+                showMessage('Fehler: Alle Einträge sind ungültig! Speichern abgebrochen, um Datenverlust zu vermeiden.', 'error');
+                return;
+            }
+
+            gameData.items = validItems;
+
+            const stringifiedData = JSON.stringify(gameData);
+            cachedStorageSize = (stringifiedData.length / 1024).toFixed(2);
+            localStorage.setItem(STORAGE_KEY, stringifiedData);
+
             updateStats();
         }
 
@@ -2519,11 +2540,27 @@
 
         function exportData() {
             if (!gameData || !Array.isArray(gameData.items) || gameData.items.length === 0) {
-                showMessage('Error: Cannot export empty data. Please add videos first!', 'error');
+                showMessage('Fehler: Keine Daten zum Exportieren vorhanden!', 'error');
                 return;
             }
 
-            const dataStr = JSON.stringify(gameData, null, 2);
+            const validItems = gameData.items.filter(item =>
+                item &&
+                typeof item.title === 'string' && item.title.trim() !== '' &&
+                typeof item.youtube === 'string' && item.youtube.trim() !== ''
+            );
+
+            if (validItems.length === 0) {
+                showMessage('Fehler: Keine gültigen Daten zum Exportieren gefunden! Export abgebrochen.', 'error');
+                return;
+            }
+
+            const exportDataObj = {
+                ...gameData,
+                items: validItems
+            };
+
+            const dataStr = JSON.stringify(exportDataObj, null, 2);
             const dataBlob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(dataBlob);
             const link = document.createElement('a');
