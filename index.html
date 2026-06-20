@@ -2094,13 +2094,41 @@
                 tr.innerHTML = `
                     <td>${index + 1}</td>
                     <td>${crown}${escapeHTML(player.name)}</td>
-                    <td>${player.score}</td>
+                    <td class="scoreboard-score" data-target-score="${player.score}">0</td>
                     <td>${player.correct}</td>
                 `;
                 tbody.appendChild(tr);
             });
 
             document.getElementById('scoreboardModal').classList.add('active');
+
+            // Animate scores
+            const scoreCells = tbody.querySelectorAll('.scoreboard-score');
+            const duration = 1500;
+            let startTime = null;
+
+            function animateScores(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const progress = timestamp - startTime;
+                const percentage = Math.min(progress / duration, 1);
+                // Ease out function
+                const easeOut = 1 - Math.pow(1 - percentage, 3);
+
+                scoreCells.forEach(cell => {
+                    const targetScore = parseInt(cell.getAttribute('data-target-score'), 10);
+                    const currentVal = Math.floor(targetScore * easeOut);
+                    cell.textContent = currentVal;
+                });
+
+                if (percentage < 1) {
+                    requestAnimationFrame(animateScores);
+                } else {
+                    scoreCells.forEach(cell => {
+                        cell.textContent = cell.getAttribute('data-target-score');
+                    });
+                }
+            }
+            requestAnimationFrame(animateScores);
         }
 
         function closeResultModal() {
