@@ -1679,7 +1679,26 @@
         }
 
         function saveGameData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
+            if (!gameData || !Array.isArray(gameData.items)) {
+                showMessage('Fehler: Ungültige Spieldaten! Speichern abgebrochen.', 'error');
+                return;
+            }
+
+            const validItems = gameData.items.filter(item =>
+                item &&
+                typeof item.title === 'string' && item.title.trim() !== '' &&
+                typeof item.youtube === 'string' && item.youtube.trim() !== ''
+            );
+
+            if (validItems.length === 0) {
+                showMessage('Fehler: Keine gültigen Videos zum Speichern! Speichern abgebrochen.', 'error');
+                return;
+            }
+
+            gameData.items = validItems;
+            const dataString = JSON.stringify(gameData);
+            localStorage.setItem(STORAGE_KEY, dataString);
+            cachedStorageSize = (dataString.length / 1024).toFixed(2);
             updateStats();
         }
 
@@ -2518,12 +2537,24 @@
         }
 
         function exportData() {
-            if (!gameData || !Array.isArray(gameData.items) || gameData.items.length === 0) {
+            if (!gameData || !Array.isArray(gameData.items)) {
+                showMessage('Error: Cannot export invalid data.', 'error');
+                return;
+            }
+
+            const validItems = gameData.items.filter(item =>
+                item &&
+                typeof item.title === 'string' && item.title.trim() !== '' &&
+                typeof item.youtube === 'string' && item.youtube.trim() !== ''
+            );
+
+            if (validItems.length === 0) {
                 showMessage('Error: Cannot export empty data. Please add videos first!', 'error');
                 return;
             }
 
-            const dataStr = JSON.stringify(gameData, null, 2);
+            const exportDataObj = { ...gameData, items: validItems };
+            const dataStr = JSON.stringify(exportDataObj, null, 2);
             const dataBlob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(dataBlob);
             const link = document.createElement('a');
