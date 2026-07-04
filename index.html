@@ -1679,7 +1679,27 @@
         }
 
         function saveGameData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
+            if (!gameData || !Array.isArray(gameData.items)) {
+                showMessage('Fehler beim Speichern: Ungültige Datenstruktur.', 'error');
+                return;
+            }
+
+            const validItems = gameData.items.filter(item =>
+                item &&
+                typeof item.title === 'string' && item.title.trim() !== '' &&
+                typeof item.youtube === 'string' && item.youtube.trim() !== ''
+            );
+
+            if (validItems.length === 0) {
+                showMessage('Fehler beim Speichern: Keine gültigen Videos zum Speichern gefunden.', 'error');
+                return;
+            }
+
+            gameData.items = validItems;
+
+            const stringifiedData = JSON.stringify(gameData);
+            localStorage.setItem(STORAGE_KEY, stringifiedData);
+            cachedStorageSize = (stringifiedData.length / 1024).toFixed(2);
             updateStats();
         }
 
@@ -1720,6 +1740,12 @@
 
         function handleMultiplayerRound() {
             if (gameState.isMultiplayer && gameState.gameOver) {
+                if (!Array.isArray(gameState.players) || gameState.players.length === 0) {
+                    showMessage('Multiplayer-Fehler: Ungültige Spielerdaten! Wechsle zu Einzelspieler...', 'error');
+                    gameState.isMultiplayer = false;
+                    return false;
+                }
+
                 gameState.currentPlayerIndex++;
                 if (gameState.currentPlayerIndex >= gameState.players.length) {
                     gameState.currentPlayerIndex = 0;
