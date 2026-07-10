@@ -1679,6 +1679,27 @@
         }
 
         function saveGameData() {
+            if (!gameData || !Array.isArray(gameData.items)) {
+                showMessage('Fehler: Ungültige Datenstruktur! Speichern abgebrochen.', 'error');
+                return;
+            }
+
+            const validItems = gameData.items.filter(item =>
+                item &&
+                typeof item.title === 'string' && item.title.trim() !== '' &&
+                typeof item.youtube === 'string' && item.youtube.trim() !== ''
+            );
+
+            if (validItems.length === 0) {
+                showMessage('Fehler: Keine gültigen Daten zum Speichern vorhanden!', 'error');
+                return;
+            }
+
+            gameData.items = validItems;
+
+            // Update cached storage size
+            cachedStorageSize = (JSON.stringify(gameData).length / 1024).toFixed(2);
+
             localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
             updateStats();
         }
