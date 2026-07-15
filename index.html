@@ -1679,7 +1679,32 @@
         }
 
         function saveGameData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
+            if (gameData && Array.isArray(gameData.items)) {
+                // Aggressively filter out invalid/corrupted data before saving
+                const validItems = gameData.items.filter(item =>
+                    item &&
+                    typeof item.title === 'string' && item.title.trim() !== '' &&
+                    typeof item.youtube === 'string' && item.youtube.trim() !== ''
+                );
+
+                if (validItems.length === 0) {
+                    showMessage('Fehler beim Speichern: Keine gültigen Videos vorhanden. Speichern abgebrochen.', 'error');
+                    return;
+                }
+
+                if (validItems.length < gameData.items.length) {
+                    showMessage(`Warnung: ${gameData.items.length - validItems.length} fehlerhafte Einträge wurden vor dem Speichern entfernt.`, 'warning');
+                }
+
+                gameData.items = validItems;
+            } else {
+                showMessage('Kritischer Fehler: Video-Array ist ungültig oder leer. Speichern abgebrochen.', 'error');
+                return;
+            }
+
+            const dataStr = JSON.stringify(gameData);
+            localStorage.setItem(STORAGE_KEY, dataStr);
+            cachedStorageSize = (dataStr.length / 1024).toFixed(2);
             updateStats();
         }
 
