@@ -1679,6 +1679,24 @@
         }
 
         function saveGameData() {
+            if (!gameData || !Array.isArray(gameData.items) || gameData.items.length === 0) {
+                showMessage('Fehler beim Speichern: Video-Array ist leer oder ungültig!', 'error');
+                return;
+            }
+
+            const validItems = gameData.items.filter(item =>
+                item &&
+                typeof item.title === 'string' && item.title.trim() !== '' &&
+                typeof item.youtube === 'string' && item.youtube.trim() !== ''
+            );
+
+            if (validItems.length === 0) {
+                showMessage('Fehler beim Speichern: Keine gültigen Videos zum Speichern gefunden!', 'error');
+                return;
+            }
+
+            gameData.items = validItems;
+            cachedStorageSize = (JSON.stringify(gameData).length / 1024).toFixed(2);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
             updateStats();
         }
@@ -2163,6 +2181,11 @@
 
         function skipGame() {
             if (gameState.gameOver || !gameState.videoStarted) return;
+
+            if (!gameState.currentItem) {
+                showMessage('Fehler: Kein gültiges Video zum Überspringen gefunden!', 'error');
+                return;
+            }
 
             clearInterval(gameState.timerInterval);
             gameState.gameOver = true;
