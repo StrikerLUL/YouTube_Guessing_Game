@@ -1679,7 +1679,28 @@
         }
 
         function saveGameData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
+            if (!gameData || !Array.isArray(gameData.items)) {
+                showMessage('Fehler: gameData.items ist ungültig. Daten werden nicht gespeichert.', 'error');
+                return;
+            }
+
+            const validItems = gameData.items.filter(item =>
+                item &&
+                typeof item.title === 'string' &&
+                item.title.trim() !== '' &&
+                typeof item.youtube === 'string' &&
+                item.youtube.trim() !== ''
+            );
+
+            if (validItems.length === 0 && gameData.items.length > 0) {
+                showMessage('Fehler: Keine gültigen Videos zum Speichern gefunden. Vorgang abgebrochen.', 'error');
+                return;
+            }
+
+            gameData.items = validItems;
+            const dataStr = JSON.stringify(gameData);
+            cachedStorageSize = (dataStr.length / 1024).toFixed(2);
+            localStorage.setItem(STORAGE_KEY, dataStr);
             updateStats();
         }
 
@@ -2162,6 +2183,10 @@
         }
 
         function skipGame() {
+            if (!gameState.currentItem) {
+                showMessage('Fehler: Kein gültiges Video gefunden! Bitte überprüfe die Datenbank.', 'error');
+                return;
+            }
             if (gameState.gameOver || !gameState.videoStarted) return;
 
             clearInterval(gameState.timerInterval);
@@ -2523,7 +2548,25 @@
                 return;
             }
 
-            const dataStr = JSON.stringify(gameData, null, 2);
+            const validItems = gameData.items.filter(item =>
+                item &&
+                typeof item.title === 'string' &&
+                item.title.trim() !== '' &&
+                typeof item.youtube === 'string' &&
+                item.youtube.trim() !== ''
+            );
+
+            if (validItems.length === 0) {
+                showMessage('Fehler: Keine gültigen Videos zum Exportieren gefunden.', 'error');
+                return;
+            }
+
+            const exportDataObj = {
+                ...gameData,
+                items: validItems
+            };
+
+            const dataStr = JSON.stringify(exportDataObj, null, 2);
             const dataBlob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(dataBlob);
             const link = document.createElement('a');
