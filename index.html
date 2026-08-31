@@ -1679,6 +1679,13 @@
         }
 
         function saveGameData() {
+            if (!gameData || !Array.isArray(gameData.items) || gameData.items.length === 0) {
+                showMessage('Fehler beim Speichern: Keine gültigen Videodaten vorhanden! Lade Standarddaten...', 'error');
+                createDefaultData(true);
+                return;
+            }
+
+            cachedStorageSize = (JSON.stringify(gameData).length / 1024).toFixed(2);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
             updateStats();
         }
@@ -1720,6 +1727,12 @@
 
         function handleMultiplayerRound() {
             if (gameState.isMultiplayer && gameState.gameOver) {
+                if (!gameState.players || !Array.isArray(gameState.players) || gameState.players.length === 0) {
+                    showMessage('Fehler: Ungültige Spielerdaten! Wechsle zum Einzelspieler-Modus...', 'error');
+                    gameState.isMultiplayer = false;
+                    return false;
+                }
+
                 gameState.currentPlayerIndex++;
                 if (gameState.currentPlayerIndex >= gameState.players.length) {
                     gameState.currentPlayerIndex = 0;
