@@ -1853,7 +1853,10 @@
         }
 
         function loadGameContent() {
-            if (!gameState.currentItem) return;
+            if (!gameState.currentItem) {
+                showMessage('Fehler: Video konnte nicht geladen werden (leeres Array oder ungültige ID)!', 'error');
+                return;
+            }
 
             // Lösche die Video-URL damit nichts automatisch abspielt
             const youtubePlayer = document.getElementById('youtubePlayer');
@@ -2162,6 +2165,10 @@
         }
 
         function skipGame() {
+            if (!gameState.currentItem) {
+                showMessage('Fehler: Kein Video zum Überspringen gefunden (leeres Array oder ungültige Daten)!', 'error');
+                return;
+            }
             if (gameState.gameOver || !gameState.videoStarted) return;
 
             clearInterval(gameState.timerInterval);
