@@ -1853,7 +1853,10 @@
         }
 
         function loadGameContent() {
-            if (!gameState.currentItem) return;
+            if (!gameState.currentItem) {
+                showMessage('Fehler: Kein aktuelles Video gefunden!', 'error');
+                return;
+            }
 
             // Lösche die Video-URL damit nichts automatisch abspielt
             const youtubePlayer = document.getElementById('youtubePlayer');
