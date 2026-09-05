@@ -1679,7 +1679,21 @@
         }
 
         function saveGameData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
+            if (!gameData || !Array.isArray(gameData.items)) {
+                showMessage('Kritischer Fehler: Spieldaten beschädigt! Speichern abgebrochen.', 'error');
+                return;
+            }
+
+            const validItems = gameData.items.filter(item =>
+                item &&
+                typeof item.title === 'string' && item.title.trim() !== '' &&
+                typeof item.youtube === 'string' && item.youtube.trim() !== ''
+            );
+
+            gameData.items = validItems;
+            const dataString = JSON.stringify(gameData);
+            localStorage.setItem(STORAGE_KEY, dataString);
+            cachedStorageSize = (dataString.length / 1024).toFixed(2);
             updateStats();
         }
 
@@ -2450,7 +2464,10 @@
             }
 
             const item = gameData.items.find(i => i.id === id);
-            if (!item) return;
+            if (!item) {
+                showMessage('Fehler: Eintrag nicht gefunden!', 'error');
+                return;
+            }
 
             document.getElementById('titleInput').value = item.title;
             document.getElementById('youtubeInput').value = item.youtube;
@@ -2514,16 +2531,31 @@
                 saveGameData();
                 showMessage(`"${title}" deleted!`, 'success');
                 refreshManageTab();
+            } else {
+                showMessage('Fehler: Eintrag nicht gefunden!', 'error');
             }
         }
 
         function exportData() {
-            if (!gameData || !Array.isArray(gameData.items) || gameData.items.length === 0) {
-                showMessage('Error: Cannot export empty data. Please add videos first!', 'error');
+            if (!gameData || !Array.isArray(gameData.items)) {
+                showMessage('Fehler: Ungültige Datenstruktur! Export abgebrochen.', 'error');
                 return;
             }
 
-            const dataStr = JSON.stringify(gameData, null, 2);
+            const validItems = gameData.items.filter(item =>
+                item &&
+                typeof item.title === 'string' && item.title.trim() !== '' &&
+                typeof item.youtube === 'string' && item.youtube.trim() !== '' &&
+                convertToYoutubeEmbed(item.youtube) !== null
+            );
+
+            if (validItems.length === 0) {
+                showMessage('Fehler: Leeres Video-Array oder keine gültigen Einträge! Export abgebrochen.', 'error');
+                return;
+            }
+
+            const exportObj = { ...gameData, items: validItems };
+            const dataStr = JSON.stringify(exportObj, null, 2);
             const dataBlob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(dataBlob);
             const link = document.createElement('a');
