@@ -1679,7 +1679,21 @@
         }
 
         function saveGameData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
+            if (!gameData || !Array.isArray(gameData.items)) {
+                showMessage('Fehler: Spieldaten ungültig! Speichern abgebrochen.', 'error');
+                return;
+            }
+
+            // Korrupte Daten filtern, aber leeres Array erlauben
+            gameData.items = gameData.items.filter(item =>
+                item &&
+                typeof item.title === 'string' && item.title.trim() !== '' &&
+                typeof item.youtube === 'string' && item.youtube.trim() !== ''
+            );
+
+            const dataString = JSON.stringify(gameData);
+            cachedStorageSize = (dataString.length / 1024).toFixed(2);
+            localStorage.setItem(STORAGE_KEY, dataString);
             updateStats();
         }
 
